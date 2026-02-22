@@ -104,6 +104,15 @@ class MessageManager:
         self.logger.debug(*args, **kwargs)
 
     def log_info(self, *args, **kwargs):
+        # Defensive check: create logger if it doesn't exist (for inference use cases)
+        if not hasattr(self, 'logger') or self.logger is None:
+            import logging
+            self.logger = logging.getLogger('opengait')
+            self.logger.setLevel(logging.INFO)
+            self.logger.propagate = False
+            handler = logging.StreamHandler()
+            handler.setFormatter(logging.Formatter('[%(levelname)s]: %(message)s'))
+            self.logger.addHandler(handler)
         self.logger.info(*args, **kwargs)
 
     def log_warning(self, *args, **kwargs):
@@ -115,7 +124,17 @@ noop = NoOp()
 
 
 def get_msg_mgr():
-    if torch.distributed.get_rank() > 0:
-        return noop
-    else:
+    # Handle case where distributed is not initialized (for single-process inference)
+    try:
+        if torch.distributed.is_initialized():
+            if torch.distributed.get_rank() > 0:
+                return noop
+            else:
+                return msg_mgr
+        else:
+            # Distributed not initialized, return msg_mgr for single-process use
+            return msg_mgr
+    except RuntimeError:
+        # get_rank() failed because distributed not initialized
+        # Return msg_mgr for single-process inference
         return msg_mgr

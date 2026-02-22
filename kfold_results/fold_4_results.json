@@ -1,0 +1,5 @@
+{
+  "fold": 4,
+  "checkpoint_iter": 10000,
+  "note": "Best checkpoint not found - using final iteration"
+}

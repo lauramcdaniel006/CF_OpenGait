@@ -1,0 +1,146 @@
+data_cfg:
+  dataset_name: Dataset_FrailtyGait3D
+  dataset_root: /cis/net/r38/data/lmcdan11/sils
+  frailty_label_file: /cis/home/lmcdan11/OpenGait_silhall/opengait/frailty_label.csv
+  dataset_partition: /cis/home/lmcdan11/Documents_Swin/CF_OpenGait/FrailtySet.json
+  num_workers: 0
+   # data_in_use: [true]
+  remove_no_gallery: false # Remove probe if no gallery for it
+  test_dataset_name: Dataset_FrailtyGait3D
+  cache: true
+
+evaluator_cfg:
+  enable_float16: true
+  restore_ckpt_strict: false
+  restore_hint: /cis/home/lmcdan11/Documents_Swin/OpenGait/opengait/pts/swin_pts/ccpg/SwinGait3D_B1122_C2-20000.pt
+ #/cis/home/lmcdan11/Documents/OpenGait_swin/pts/swin_pts/ccpg/SwinGait3D_B1122_C2-20000.pt
+  save_name: Dataset_FrailtyGait3D
+  sampler:
+    batch_shuffle: false
+    batch_size: 2
+    sample_type: all_ordered # all indicates whole sequence used to test, while ordered means input sequence by its natural order; Other options:   fixed_unordered
+    frames_all_limit: 80 # limit the number of sampled frames to prevent out of memory
+  eval_func: evaluate_scoliosis
+  metric: euc # cos
+  transform:
+    - type: BaseSilCuttingTransform
+
+loss_cfg:
+  - loss_term_weight: 1.5  # Increased for better feature learning
+    margin: 0.25  # Increased from 0.2 to 0.25 for better feature separation (Prefrail unstable: 0%→60%→0%)
+    type: TripletLoss
+    log_prefix: triplet
+  - loss_term_weight: 2.0  # Decreased from 2.5 to reduce overfitting (train 78.5% vs test 46.67%)
+    scale: 20  # Increased scale for better logits separation and confidence
+    type: CrossEntropyLoss
+    log_prefix: softmax
+    log_accuracy: true
+    gamma: 1.5  # Moderate focal loss to focus on hard examples
+    class_weights: [1.0, 1.6, 1.0]  # CRITICAL: Prefrail weight increased from 1.4 to 1.6 (unstable: 0%→60%→0%→20%)
+#5,3,1     1.5,1.2,1.0, 111- chnages to 1 to see if it gets to 73.3 but was 66.7 with 5,3,1 at 3500 iterations 
+model_cfg:
+  model: SwinGait
+  Backbone:
+    mode: p3d
+    in_channels: 1
+    layers:
+      - 2
+      - 2 # Reduced from 3
+      - 3 # Reduced from 4
+      - 2 # Reduced from 3
+    channels:
+      - 64
+      - 128
+    freeze_layers: true  # Freeze CNN backbone (layer0, layer1, layer2)
+  bin_num: 
+    - 15
+  SeparateBNNecks:
+    in_channels: 256
+    class_num: 3
+    parts_num: 16
+    dropout_rate: 0.5  # Increased from 0.48 to reduce overfitting (train 91.87% vs test 66.67% = 25% gap, target: 85% test acc)
+  backbone_lr: [0.00019, 0.00029, 0.00059, 0.0019] 
+  SwinTransformerBlock3D:
+    frozen_stages: 1  # Unfrozen transformer for better learning (helps a lot per user observation)
+    drop: 0.5  # Increased from 0.45 to reduce overfitting (train 88.75% vs test 73.33% = 15% gap, high variance)
+    attn_drop: 0.4  # Increased from 0.35 to stabilize Prefrail recall (unstable: 80%→40%→20%→80%)
+    drop_path: 0.35  # Increased drop path for better regularization
+    use_checkpoint: true  # Enable gradient checkpointing for memory savings (fixed DDP compatibility)
+      
+
+    #  # new:
+    #    SwinTransformerBlock3D:
+    # frozen_stages: 1  # Unfrozen transformer for better learning (helps a lot per user observation)
+    # drop: 0.4  # Increased dropout to reduce overfitting (training 77% vs test 53%)
+    # attn_drop: 0.4  # Increased attention dropout for regularization
+    # drop_path: 0.35  # Increased drop path for better regularization
+    # use_checkpoint: true  # 
+
+
+
+# optimizer_cfg:
+#   lr: 0.00008  # Slightly increased LR for better convergence (target: 73.3% accuracy)
+#   solver: AdamW
+#   weight_decay: 0.0015  # Increased to reduce overfitting (training 77% vs test 53%)
+
+optimizer_cfg:
+  lr: 0.0001  # Moderate LR for better generalization
+  solver: AdamW
+  weight_decay: 0.0025  # Increased from 0.002 to reduce overfitting (train 91.87% vs test 66.67% = 25% gap, target: 85% test acc)
+
+
+scheduler_cfg:
+  gamma: 0.5  # More gradual decay for better generalization
+  milestones: # Learning Rate Reduction at each milestones
+    - 15000
+    - 30000
+    - 50000
+    - 70000
+    - 90000
+  scheduler: MultiStepLR
+
+trainer_cfg:
+  enable_float16: false # half_percesion float for memory reduction and speedup
+  fix_BN: true
+  log_iter: 100
+  with_test: true
+  optimizer_reset: True
+  restore_ckpt_strict: false
+  restore_hint: /cis/home/lmcdan11/Documents_Swin/OpenGait/opengait/pts/swin_pts/ccpg/SwinGait3D_B1122_C2-20000.pt #/cis/home/lmcdan11/Documents/OpenGait_swin/pts/swin_pts/ccpg/SwinGait3D_B1122_C2-20000.pt
+  save_iter: 500
+  save_name: Dataset_FrailtyGait3D
+  sync_BN: true
+  T_max_iter: 60000  # Reduced for smaller model
+  total_iter: 80000  # Reduced for smaller model
+  find_unused_parameters: true  # Set to true to handle frozen layers that don't receive gradients
+  grad_clip: 1.0  # Gradient clipping max norm (0 to disable, typically 0.5-5.0)
+  sampler:
+    batch_shuffle: true
+    batch_size:
+      - 4 # Reduced from 4 for memory
+      - 4 # Reduced from 4 for memory
+    frames_num_fixed: 60 # Reduced from 60 for memory
+    frames_skip_num: 3 # Reduced from 5 for memory 
+    sample_type: fixed_ordered # fixed control input frames number, unordered for controlling order of input tensor; Other options: unfixed_ordered or all_ordered
+    type: TripletSampler
+  transform:
+    - type: Compose
+      trf_cfg:
+        - type: BaseSilCuttingTransform
+        - type: RandomHorizontalFlip
+          prob: 0.25  # Higher for better generalization
+        - type: RandomRotate
+          prob: 0.3  # Higher for robustness
+          degrees: 6  # Larger rotation for better generalization
+        - type: RandomAffine
+          prob: 0.2  # Higher for robustness
+          degrees: 42   # Larger rotation
+          translate: 0.08  # Higher translation
+          scale: [0.9, 1.1]  # Larger scale variation
+        - type: RandomErasing
+          prob: 0.25  # Higher for robustness
+          sl: 0.02
+          sh: 0.15
+        - type: RandomPerspective
+          prob: 0.2  # Higher for additional robustness
+

@@ -2,7 +2,7 @@ data_cfg:
   dataset_name: CCPG
   dataset_root: your_path
   dataset_partition: ./datasets/CCPG/CCPG.json
-  num_workers: 1
+  num_workers: 0
   data_in_use: [True, False, False, False]
   remove_no_gallery: false # Remove probe if no gallery for it
   test_dataset_name: CCPG
@@ -66,10 +66,11 @@ scheduler_cfg:
   scheduler: MultiStepLR
 
 trainer_cfg:
+  seed: 42  # Fixed seed for reproducibility
   enable_float16: true # half_percesion float for memory reduction and speedup
   fix_BN: false
   log_iter: 100
-  with_test: false
+  with_test: true
   restore_ckpt_strict: true
   restore_hint: 0
   save_iter: 30000

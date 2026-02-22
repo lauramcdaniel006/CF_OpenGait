@@ -114,7 +114,7 @@ class SeparateBNNecks(nn.Module):
         Github: https://github.com/michuanhaohao/reid-strong-baseline
     """
 
-    def __init__(self, parts_num, in_channels, class_num, norm=True, parallel_BN1d=True):
+    def __init__(self, parts_num, in_channels, class_num, norm=True, parallel_BN1d=True, dropout_rate=0.0):
         super(SeparateBNNecks, self).__init__()
         self.p = parts_num
         self.class_num = class_num
@@ -127,6 +127,11 @@ class SeparateBNNecks(nn.Module):
         else:
             self.bn1d = clones(nn.BatchNorm1d(in_channels), parts_num)
         self.parallel_BN1d = parallel_BN1d
+        self.dropout_rate = dropout_rate
+        if dropout_rate > 0:
+            self.dropout = nn.Dropout(dropout_rate)
+        else:
+            self.dropout = None
 
     def forward(self, x):
         """
@@ -140,6 +145,11 @@ class SeparateBNNecks(nn.Module):
         else:
             x = torch.cat([bn(_x) for _x, bn in zip(
                 x.split(1, 2), self.bn1d)], 2)  # [p, n, c]
+        
+        # Apply dropout if enabled
+        if self.dropout is not None:
+            x = self.dropout(x)
+        
         feature = x.permute(2, 0, 1).contiguous()
         if self.norm:
             feature = F.normalize(feature, dim=-1)  # [p, n, c]

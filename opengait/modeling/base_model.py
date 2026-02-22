@@ -144,6 +144,7 @@ class BaseModel(MetaModel, nn.Module):
 
         self.build_network(cfgs['model_cfg'])
         self.init_parameters()
+        self.log_trainable_frozen_params()
         self.trainer_trfs = get_transform(cfgs['trainer_cfg']['transform'])
 
         self.msg_mgr.log_info(cfgs['data_cfg'])
@@ -155,6 +156,7 @@ class BaseModel(MetaModel, nn.Module):
                 cfgs['data_cfg'], train=False)
             self.evaluator_trfs = get_transform(
                 cfgs['evaluator_cfg']['transform'])
+            self.val_loader = None
 
         self.device = torch.distributed.get_rank()
         torch.cuda.set_device(self.device)
@@ -162,6 +164,12 @@ class BaseModel(MetaModel, nn.Module):
             "cuda", self.device))
 
         if training:
+            try:
+                from data.sampler import reset_batch_counter
+                reset_batch_counter()
+            except ImportError:
+                pass  # Fallback if import fails
+            
             self.loss_aggregator = LossAggregator(cfgs['loss_cfg'])
             self.optimizer = self.get_optimizer(self.cfgs['optimizer_cfg'])
             self.scheduler = self.get_scheduler(cfgs['scheduler_cfg'])
@@ -169,6 +177,135 @@ class BaseModel(MetaModel, nn.Module):
         restore_hint = self.engine_cfg['restore_hint']
         if restore_hint != 0:
             self.resume_ckpt(restore_hint)
+
+    def log_trainable_frozen_params(self):
+        """Log summary of trainable vs frozen parameters for any model."""
+        trainable_params = sum(p.numel() for p in self.parameters() if p.requires_grad)
+        total_params = sum(p.numel() for p in self.parameters())
+        frozen_params = total_params - trainable_params
+        
+        # Define order for top-level components (main modules in architectural order)
+        top_level_order = {
+            'layer0': 0,
+            'layer1': 1,
+            'layer2': 2,
+            'ulayer': 3,
+            'transformer': 4,
+            'FCs': 5,
+            'BNNecks': 6,
+            'TP': 7,
+            'HPP': 8,
+        }
+        
+        # Collect all modules with their parameter counts in model order
+        layer_info = []
+        for name, module in self.named_modules():
+            # Skip if it's the root module itself
+            if name == '':
+                continue
+            
+            module_trainable = sum(p.numel() for p in module.parameters() if p.requires_grad)
+            module_total = sum(p.numel() for p in module.parameters())
+            
+            # Only include modules that have parameters (skip empty modules)
+            if module_total > 0:
+                # Calculate depth for ordering
+                depth = name.count('.')
+                # Get top-level component name
+                top_level = name.split('.')[0]
+                # Get sort priority (lower number = appears first)
+                priority = top_level_order.get(top_level, 999)  # Unknown components go last
+                layer_info.append((priority, depth, name, module_trainable, module_total))
+        
+        self.msg_mgr.log_info("=" * 70)
+        self.msg_mgr.log_info("LAYER FREEZING STATUS - INDIVIDUAL LAYERS")
+        self.msg_mgr.log_info("=" * 70)
+        self.msg_mgr.log_info("🔥 = Trainable (With gradients) | ❄️ = Frozen (No gradients)")
+        self.msg_mgr.log_info("")
+        
+        # Sort by priority (top-level component order), then depth, then name
+        layer_info.sort(key=lambda x: (x[0], x[1], x[2]))
+        
+        for priority, depth, name, module_trainable, module_total in layer_info:
+            if module_trainable == 0:
+                # Completely frozen
+                emoji = "❄️"
+                status = f"{module_total:>12,} params (FROZEN)"
+            elif module_trainable == module_total:
+                # Completely trainable
+                emoji = "🔥"
+                status = f"{module_trainable:>12,} params (TRAINABLE)"
+            else:
+                # Partially trainable
+                emoji = "🔥❄️"
+                status = f"{module_trainable:>12,} / {module_total:>12,} params (PARTIAL)"
+            
+            self.msg_mgr.log_info(f"{emoji} {name:55s} {status}")
+        
+        self.msg_mgr.log_info("")
+        self.msg_mgr.log_info("=" * 70)
+        self.msg_mgr.log_info("SUMMARY:")
+        self.msg_mgr.log_info(f"  Total parameters:        {total_params:>12,}")
+        self.msg_mgr.log_info(f"  🔥 Trainable parameters:    {trainable_params:>12,} ({trainable_params/total_params*100:.2f}%)")
+        self.msg_mgr.log_info(f"  ❄️  Frozen parameters:       {frozen_params:>12,} ({frozen_params/total_params*100:.2f}%)")
+        self.msg_mgr.log_info("=" * 70)
+
+    def verify_gradient_status(self, check_frozen=True, check_trainable=True):
+        """Verify that frozen parameters have no gradients and trainable ones do.
+        
+        This should be called after loss.backward() to verify freezing is working correctly.
+        
+        Args:
+            check_frozen: If True, verify frozen parameters have no gradients
+            check_trainable: If True, verify trainable parameters have gradients
+        """
+        frozen_params_with_grad = []
+        trainable_params_without_grad = []
+        frozen_params_count = 0
+        trainable_params_count = 0
+        
+        for name, param in self.named_parameters():
+            has_grad = param.grad is not None
+            is_trainable = param.requires_grad
+            
+            if not is_trainable:
+                frozen_params_count += param.numel()
+                if has_grad and check_frozen:
+                    frozen_params_with_grad.append((name, param.numel()))
+            else:
+                trainable_params_count += param.numel()
+                if not has_grad and check_trainable:
+                    trainable_params_without_grad.append((name, param.numel()))
+        
+        # Log verification results
+        self.msg_mgr.log_info("=" * 60)
+        self.msg_mgr.log_info("GRADIENT VERIFICATION (after backward pass)")
+        self.msg_mgr.log_info("=" * 60)
+        
+        if check_frozen:
+            if frozen_params_with_grad:
+                self.msg_mgr.log_warning(f"⚠️  FROZEN PARAMETERS WITH GRADIENTS (SHOULD NOT HAPPEN): {len(frozen_params_with_grad)} parameters")
+                for name, numel in frozen_params_with_grad[:10]:  # Show first 10
+                    self.msg_mgr.log_warning(f"  • {name} ({numel:,} params)")
+                if len(frozen_params_with_grad) > 10:
+                    self.msg_mgr.log_warning(f"  ... and {len(frozen_params_with_grad) - 10} more")
+            else:
+                self.msg_mgr.log_info(f"✅ FROZEN PARAMETERS: {frozen_params_count:,} parameters have NO gradients (correct)")
+        
+        if check_trainable:
+            if trainable_params_without_grad:
+                self.msg_mgr.log_warning(f"⚠️  TRAINABLE PARAMETERS WITHOUT GRADIENTS: {len(trainable_params_without_grad)} parameters")
+                for name, numel in trainable_params_without_grad[:10]:  # Show first 10
+                    self.msg_mgr.log_warning(f"  • {name} ({numel:,} params)")
+                if len(trainable_params_without_grad) > 10:
+                    self.msg_mgr.log_warning(f"  ... and {len(trainable_params_without_grad) - 10} more")
+            else:
+                self.msg_mgr.log_info(f"✅ TRAINABLE PARAMETERS: {trainable_params_count:,} parameters have gradients (correct)")
+        
+        self.msg_mgr.log_info("=" * 60)
+        
+        # Return True if verification passed
+        return len(frozen_params_with_grad) == 0 and len(trainable_params_without_grad) == 0
 
     def get_backbone(self, backbone_cfg):
         """Get the backbone of the model."""
@@ -202,15 +339,20 @@ class BaseModel(MetaModel, nn.Module):
                     nn.init.normal_(m.weight.data, 1.0, 0.02)
                     nn.init.constant_(m.bias.data, 0.0)
 
-    def get_loader(self, data_cfg, train=True):
+    def get_loader(self, data_cfg, train=True, use_val_set=False):
         sampler_cfg = self.cfgs['trainer_cfg']['sampler'] if train else self.cfgs['evaluator_cfg']['sampler']
-        dataset = DataSet(data_cfg, train)
+        dataset = DataSet(data_cfg, train, use_val_set=use_val_set)
+        
+        # Reset random seed for deterministic sampling
+        from utils import set_seed
+        seed = torch.distributed.get_rank() if torch.distributed.is_initialized() else 0
+        set_seed(seed)
 
         Sampler = get_attr_from([Samplers], sampler_cfg['type'])
         vaild_args = get_valid_args(Sampler, sampler_cfg, free_keys=[
             'sample_type', 'type'])
         sampler = Sampler(dataset, **vaild_args)
-
+        
         loader = tordata.DataLoader(
             dataset=dataset,
             batch_sampler=sampler,
@@ -254,9 +396,28 @@ class BaseModel(MetaModel, nn.Module):
         model_state_dict = checkpoint['model']
 
         if not load_ckpt_strict:
+            current_state_dict = self.state_dict()
+            filtered_state_dict = {}
+            skipped_params = []
+            
+            for key, value in model_state_dict.items():
+                if key in current_state_dict:
+                    if current_state_dict[key].shape == value.shape:
+                        filtered_state_dict[key] = value
+                    else:
+                        skipped_params.append(f"{key}: checkpoint shape {value.shape} vs model shape {current_state_dict[key].shape}")
+                else:
+                    skipped_params.append(f"{key}: not in current model")
+            
+            if skipped_params:
+                self.msg_mgr.log_warning("-------- Skipped Parameters (size mismatch or missing) --------")
+                for param in skipped_params:
+                    self.msg_mgr.log_warning(f"  {param}")
+            
             self.msg_mgr.log_info("-------- Restored Params List --------")
-            self.msg_mgr.log_info(sorted(set(model_state_dict.keys()).intersection(
-                set(self.state_dict().keys()))))
+            self.msg_mgr.log_info(sorted(filtered_state_dict.keys()))
+            
+            model_state_dict = filtered_state_dict
 
         self.load_state_dict(model_state_dict, strict=load_ckpt_strict)
         if self.training:
@@ -307,6 +468,16 @@ class BaseModel(MetaModel, nn.Module):
             raise ValueError(
                 "The number of types of input data and transform should be same. But got {} and {}".format(len(seqs_batch), len(seq_trfs)))
         requires_grad = bool(self.training)
+        
+        # Reset random seed for deterministic augmentations
+        from utils import set_seed
+        base_seed = torch.distributed.get_rank() if torch.distributed.is_initialized() else 0
+        
+        if self.training:
+            set_seed(base_seed + self.iteration)
+        else:
+            set_seed(base_seed)
+        
         seqs = [np2var(np.asarray([trf(fra) for fra in seq]), requires_grad=requires_grad).float()
                 for trf, seq in zip(seq_trfs, seqs_batch)]
 
@@ -343,17 +514,20 @@ class BaseModel(MetaModel, nn.Module):
 
         if self.engine_cfg['enable_float16']:
             self.Scaler.scale(loss_sum).backward()
+            if 'grad_clip' in self.engine_cfg and self.engine_cfg['grad_clip'] > 0:
+                self.Scaler.unscale_(self.optimizer)
+                torch.nn.utils.clip_grad_norm_(self.parameters(), self.engine_cfg['grad_clip'])
             self.Scaler.step(self.optimizer)
             scale = self.Scaler.get_scale()
             self.Scaler.update()
-            # Warning caused by optimizer skip when NaN
-            # https://discuss.pytorch.org/t/optimizer-step-before-lr-scheduler-step-error-using-gradscaler/92930/5
             if scale != self.Scaler.get_scale():
                 self.msg_mgr.log_debug("Training step skip. Expected the former scale equals to the present, got {} and {}".format(
                     scale, self.Scaler.get_scale()))
                 return False
         else:
             loss_sum.backward()
+            if 'grad_clip' in self.engine_cfg and self.engine_cfg['grad_clip'] > 0:
+                torch.nn.utils.clip_grad_norm_(self.parameters(), self.engine_cfg['grad_clip'])
             self.optimizer.step()
 
         self.iteration += 1
@@ -402,6 +576,12 @@ class BaseModel(MetaModel, nn.Module):
     @ staticmethod
     def run_train(model):
         """Accept the instance object(model) here, and then run the train loop."""
+        try:
+            from data.sampler import reset_batch_counter
+            reset_batch_counter()
+        except ImportError:
+            pass  # Fallback if import fails
+        
         for inputs in model.train_loader:
             ipts = model.inputs_pretreament(inputs)
             with autocast(enabled=model.engine_cfg['enable_float16']):
@@ -421,9 +601,7 @@ class BaseModel(MetaModel, nn.Module):
                 # save the checkpoint
                 model.save_ckpt(model.iteration)
 
-                # run test if with_test = true
                 if model.engine_cfg['with_test']:
-                    model.msg_mgr.log_info("Running test...")
                     model.eval()
                     result_dict = BaseModel.run_test(model)
                     model.train()
@@ -438,11 +616,18 @@ class BaseModel(MetaModel, nn.Module):
     @ staticmethod
     def run_test(model):
         """Accept the instance object(model) here, and then run the test loop."""
+        try:
+            from data.sampler import reset_batch_counter
+            reset_batch_counter()
+        except ImportError:
+            pass  # Fallback if import fails
+        
         evaluator_cfg = model.cfgs['evaluator_cfg']
         if torch.distributed.get_world_size() != evaluator_cfg['sampler']['batch_size']:
             raise ValueError("The batch size ({}) must be equal to the number of GPUs ({}) in testing mode!".format(
                 evaluator_cfg['sampler']['batch_size'], torch.distributed.get_world_size()))
         rank = torch.distributed.get_rank()
+        
         with torch.no_grad():
             info_dict = model.inference(rank)
         if rank == 0:

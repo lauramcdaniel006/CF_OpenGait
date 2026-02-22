@@ -1,0 +1,115 @@
+{
+  "per_fold": [
+    {
+      "model_name": "UF",
+      "fold": 1,
+      "checkpoint_iter": 7500,
+      "accuracy": 0.6364,
+      "precision": 0.42219999999999996,
+      "recall": 0.5832999999999999,
+      "f1": 0.4889,
+      "auc_macro": 0.8333,
+      "auc_micro": 0.7727
+    },
+    {
+      "model_name": "UF",
+      "fold": 2,
+      "checkpoint_iter": 8000,
+      "accuracy": 0.7273000000000001,
+      "precision": 0.7833,
+      "recall": 0.7222,
+      "f1": 0.7389,
+      "auc_macro": 0.877,
+      "auc_micro": 0.8636
+    },
+    {
+      "model_name": "UF",
+      "fold": 3,
+      "checkpoint_iter": 5500,
+      "accuracy": 0.5455,
+      "precision": 0.39289999999999997,
+      "recall": 0.5832999999999999,
+      "f1": 0.45,
+      "auc_macro": 0.6885,
+      "auc_micro": 0.6983
+    },
+    {
+      "model_name": "UF",
+      "fold": 4,
+      "checkpoint_iter": 3500,
+      "accuracy": 0.7273000000000001,
+      "precision": 0.7222,
+      "recall": 0.7222,
+      "f1": 0.7222,
+      "auc_macro": 0.8036,
+      "auc_micro": 0.7851
+    },
+    {
+      "model_name": "UF",
+      "fold": 5,
+      "checkpoint_iter": 2000,
+      "accuracy": 0.5455,
+      "precision": 0.6667000000000001,
+      "recall": 0.5556,
+      "f1": 0.5238,
+      "auc_macro": 0.5119,
+      "auc_micro": 0.5413
+    }
+  ],
+  "aggregated": {
+    "accuracy_mean": 0.6364000000000001,
+    "accuracy_std": 0.08130343166189238,
+    "accuracy_values": [
+      0.6364,
+      0.7273000000000001,
+      0.5455,
+      0.7273000000000001,
+      0.5455
+    ],
+    "precision_mean": 0.59746,
+    "precision_std": 0.15965688961018878,
+    "precision_values": [
+      0.42219999999999996,
+      0.7833,
+      0.39289999999999997,
+      0.7222,
+      0.6667000000000001
+    ],
+    "recall_mean": 0.63332,
+    "recall_std": 0.07327169712788151,
+    "recall_values": [
+      0.5832999999999999,
+      0.7222,
+      0.5832999999999999,
+      0.7222,
+      0.5556
+    ],
+    "f1_mean": 0.58476,
+    "f1_std": 0.12142027178358643,
+    "f1_values": [
+      0.4889,
+      0.7389,
+      0.45,
+      0.7222,
+      0.5238
+    ],
+    "auc_macro_mean": 0.74286,
+    "auc_macro_std": 0.1312705694358031,
+    "auc_macro_values": [
+      0.8333,
+      0.877,
+      0.6885,
+      0.8036,
+      0.5119
+    ],
+    "auc_micro_mean": 0.7322,
+    "auc_micro_std": 0.1089005417801032,
+    "auc_micro_values": [
+      0.7727,
+      0.8636,
+      0.6983,
+      0.7851,
+      0.5413
+    ]
+  }
+}

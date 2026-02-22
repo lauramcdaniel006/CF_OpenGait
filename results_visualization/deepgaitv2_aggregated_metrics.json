@@ -1,0 +1,878 @@
+{
+  "All_Trainable": {
+    "overall_accuracy_mean": 67.144,
+    "overall_accuracy_std": 3.6502799892610995,
+    "overall_accuracy_values": [
+      64.29,
+      69.23,
+      71.43,
+      61.54,
+      69.23
+    ],
+    "precision_macro_mean": 71.756,
+    "precision_macro_std": 7.282006866242299,
+    "precision_macro_values": [
+      66.67,
+      77.38,
+      79.17,
+      60.0,
+      75.56
+    ],
+    "recall_macro_mean": 68.11,
+    "recall_macro_std": 3.677896137739618,
+    "recall_macro_values": [
+      66.67,
+      73.33,
+      70.0,
+      62.22,
+      68.33
+    ],
+    "f1_macro_mean": 66.504,
+    "f1_macro_std": 3.854283850470799,
+    "f1_macro_values": [
+      63.37,
+      69.84,
+      70.09,
+      60.53,
+      68.69
+    ],
+    "cohen_kappa_mean": 0.5787199999999999,
+    "cohen_kappa_std": 0.03345201937103349,
+    "cohen_kappa_values": [
+      0.6154,
+      0.6232,
+      0.5455,
+      0.5578,
+      0.5517
+    ],
+    "auc_macro_mean": 0.71112,
+    "auc_macro_std": 0.03264428893390086,
+    "auc_macro_values": [
+      0.7556,
+      0.7417,
+      0.6685,
+      0.6889,
+      0.7009
+    ],
+    "auc_micro_mean": 0.7348399999999999,
+    "auc_micro_std": 0.05476208907629437,
+    "auc_micro_values": [
+      0.824,
+      0.7692,
+      0.6786,
+      0.716,
+      0.6864
+    ],
+    "frail_sensitivity_mean": 73.334,
+    "frail_sensitivity_std": 22.60757005960614,
+    "frail_sensitivity_values": [
+      100.0,
+      100.0,
+      50.0,
+      66.67,
+      50.0
+    ],
+    "frail_specificity_mean": 94.0,
+    "frail_specificity_std": 8.0,
+    "frail_specificity_values": [
+      100.0,
+      90.0,
+      100.0,
+      80.0,
+      100.0
+    ],
+    "frail_precision_mean": 85.0,
+    "frail_precision_std": 20.0,
+    "frail_precision_values": [
+      100.0,
+      75.0,
+      100.0,
+      50.0,
+      100.0
+    ],
+    "prefrail_sensitivity_mean": 63.0,
+    "prefrail_sensitivity_std": 28.91366458960192,
+    "prefrail_sensitivity_values": [
+      20.0,
+      80.0,
+      100.0,
+      40.0,
+      75.0
+    ],
+    "prefrail_specificity_mean": 74.168,
+    "prefrail_specificity_std": 9.196067420370515,
+    "prefrail_specificity_values": [
+      88.89,
+      62.5,
+      66.67,
+      75.0,
+      77.78
+    ],
+    "prefrail_precision_mean": 55.928,
+    "prefrail_precision_std": 5.1288142879226974,
+    "prefrail_precision_values": [
+      50.0,
+      57.14,
+      62.5,
+      50.0,
+      60.0
+    ],
+    "nonfrail_sensitivity_mean": 68.0,
+    "nonfrail_sensitivity_std": 16.0,
+    "nonfrail_sensitivity_values": [
+      80.0,
+      40.0,
+      60.0,
+      80.0,
+      80.0
+    ],
+    "nonfrail_specificity_mean": 81.39,
+    "nonfrail_specificity_std": 15.152129883287035,
+    "nonfrail_specificity_values": [
+      55.56,
+      100.0,
+      88.89,
+      87.5,
+      75.0
+    ],
+    "nonfrail_precision_mean": 74.334,
+    "nonfrail_precision_std": 16.38396240230061,
+    "nonfrail_precision_values": [
+      50.0,
+      100.0,
+      75.0,
+      80.0,
+      66.67
+    ]
+  },
+  "Early_Frozen": {
+    "overall_accuracy_mean": 61.102,
+    "overall_accuracy_std": 3.8288870445600782,
+    "overall_accuracy_values": [
+      64.29,
+      61.54,
+      64.29,
+      61.54,
+      53.85
+    ],
+    "precision_macro_mean": 54.754,
+    "precision_macro_std": 9.461202037796255,
+    "precision_macro_values": [
+      50.0,
+      40.83,
+      66.67,
+      63.89,
+      52.38
+    ],
+    "recall_macro_mean": 63.336,
+    "recall_macro_std": 5.868749781682637,
+    "recall_macro_values": [
+      66.67,
+      66.67,
+      65.0,
+      66.67,
+      51.67
+    ],
+    "f1_macro_mean": 57.16200000000001,
+    "f1_macro_std": 6.208582446903642,
+    "f1_macro_values": [
+      55.56,
+      50.64,
+      65.4,
+      63.42,
+      50.79
+    ],
+    "cohen_kappa_mean": 0.5227600000000001,
+    "cohen_kappa_std": 0.08885065222045362,
+    "cohen_kappa_values": [
+      0.6316,
+      0.6012,
+      0.4368,
+      0.539,
+      0.4052
+    ],
+    "auc_macro_mean": 0.76296,
+    "auc_macro_std": 0.03240966522505283,
+    "auc_macro_values": [
+      0.7926,
+      0.7194,
+      0.7278,
+      0.7917,
+      0.7833
+    ],
+    "auc_micro_mean": 0.77884,
+    "auc_micro_std": 0.031217020998167005,
+    "auc_micro_values": [
+      0.8189,
+      0.7692,
+      0.7321,
+      0.7663,
+      0.8077
+    ],
+    "frail_sensitivity_mean": 85.0,
+    "frail_sensitivity_std": 20.0,
+    "frail_sensitivity_values": [
+      100.0,
+      100.0,
+      75.0,
+      100.0,
+      50.0
+    ],
+    "frail_specificity_mean": 89.77799999999999,
+    "frail_specificity_std": 6.340121134489466,
+    "frail_specificity_values": [
+      100.0,
+      80.0,
+      90.0,
+      90.0,
+      88.89
+    ],
+    "frail_precision_mean": 75.334,
+    "frail_precision_std": 13.55604012977241,
+    "frail_precision_values": [
+      100.0,
+      60.0,
+      75.0,
+      75.0,
+      66.67
+    ],
+    "prefrail_sensitivity_mean": 29.0,
+    "prefrail_sensitivity_std": 26.90724809414742,
+    "prefrail_sensitivity_values": [
+      0.0,
+      0.0,
+      60.0,
+      60.0,
+      25.0
+    ],
+    "prefrail_specificity_mean": 85.83399999999999,
+    "prefrail_specificity_std": 14.283085941070299,
+    "prefrail_specificity_values": [
+      100.0,
+      100.0,
+      88.89,
+      62.5,
+      77.78
+    ],
+    "prefrail_precision_mean": 31.665999999999997,
+    "prefrail_precision_std": 29.059288084879157,
+    "prefrail_precision_values": [
+      0.0,
+      0.0,
+      75.0,
+      50.0,
+      33.33
+    ],
+    "nonfrail_sensitivity_mean": 76.0,
+    "nonfrail_sensitivity_std": 23.323807579381203,
+    "nonfrail_sensitivity_values": [
+      100.0,
+      100.0,
+      60.0,
+      40.0,
+      80.0
+    ],
+    "nonfrail_specificity_mean": 64.72200000000001,
+    "nonfrail_specificity_std": 13.73947655480368,
+    "nonfrail_specificity_values": [
+      44.44,
+      62.5,
+      66.67,
+      87.5,
+      62.5
+    ],
+    "nonfrail_precision_mean": 57.262,
+    "nonfrail_precision_std": 6.654852064471457,
+    "nonfrail_precision_values": [
+      50.0,
+      62.5,
+      50.0,
+      66.67,
+      57.14
+    ]
+  },
+  "First_Layer_Frozen": {
+    "overall_accuracy_mean": 62.64,
+    "overall_accuracy_std": 5.046725671165415,
+    "overall_accuracy_values": [
+      64.29,
+      61.54,
+      64.29,
+      53.85,
+      69.23
+    ],
+    "precision_macro_mean": 59.888,
+    "precision_macro_std": 9.163914883934703,
+    "precision_macro_values": [
+      50.0,
+      58.89,
+      72.22,
+      50.0,
+      68.33
+    ],
+    "recall_macro_mean": 64.446,
+    "recall_macro_std": 4.566086289153983,
+    "recall_macro_values": [
+      66.67,
+      66.67,
+      65.0,
+      55.56,
+      68.33
+    ],
+    "f1_macro_mean": 59.513999999999996,
+    "f1_macro_std": 5.839228031169873,
+    "f1_macro_values": [
+      55.56,
+      58.77,
+      63.29,
+      51.62,
+      68.33
+    ],
+    "cohen_kappa_mean": 0.56572,
+    "cohen_kappa_std": 0.07638715598842519,
+    "cohen_kappa_values": [
+      0.6316,
+      0.586,
+      0.4731,
+      0.48,
+      0.6579
+    ],
+    "auc_macro_mean": 0.7442400000000001,
+    "auc_macro_std": 0.08553129485749647,
+    "auc_macro_values": [
+      0.8889,
+      0.75,
+      0.6444,
+      0.6722,
+      0.7657
+    ],
+    "auc_micro_mean": 0.76122,
+    "auc_micro_std": 0.059392571926125556,
+    "auc_micro_values": [
+      0.852,
+      0.7751,
+      0.676,
+      0.7219,
+      0.7811
+    ],
+    "frail_sensitivity_mean": 83.334,
+    "frail_sensitivity_std": 13.943536997476645,
+    "frail_sensitivity_values": [
+      100.0,
+      100.0,
+      75.0,
+      66.67,
+      75.0
+    ],
+    "frail_specificity_mean": 83.77799999999999,
+    "frail_specificity_std": 10.07636521767646,
+    "frail_specificity_values": [
+      100.0,
+      80.0,
+      70.0,
+      80.0,
+      88.89
+    ],
+    "frail_precision_mean": 67.0,
+    "frail_precision_std": 18.867962264113206,
+    "frail_precision_values": [
+      100.0,
+      60.0,
+      50.0,
+      50.0,
+      75.0
+    ],
+    "prefrail_sensitivity_mean": 26.0,
+    "prefrail_sensitivity_std": 17.435595774162696,
+    "prefrail_sensitivity_values": [
+      0.0,
+      20.0,
+      40.0,
+      20.0,
+      50.0
+    ],
+    "prefrail_specificity_mean": 88.056,
+    "prefrail_specificity_std": 10.598893527156502,
+    "prefrail_specificity_values": [
+      100.0,
+      87.5,
+      100.0,
+      75.0,
+      77.78
+    ],
+    "prefrail_precision_mean": 46.666,
+    "prefrail_precision_std": 32.318140788108465,
+    "prefrail_precision_values": [
+      0.0,
+      50.0,
+      100.0,
+      33.33,
+      50.0
+    ],
+    "nonfrail_sensitivity_mean": 84.0,
+    "nonfrail_sensitivity_std": 8.0,
+    "nonfrail_sensitivity_values": [
+      100.0,
+      80.0,
+      80.0,
+      80.0,
+      80.0
+    ],
+    "nonfrail_specificity_mean": 71.944,
+    "nonfrail_specificity_std": 14.499629788377357,
+    "nonfrail_specificity_values": [
+      44.44,
+      75.0,
+      77.78,
+      75.0,
+      87.5
+    ],
+    "nonfrail_precision_mean": 66.002,
+    "nonfrail_precision_std": 9.522044738395216,
+    "nonfrail_precision_values": [
+      50.0,
+      66.67,
+      66.67,
+      66.67,
+      80.0
+    ]
+  },
+  "First_Two_Frozen": {
+    "overall_accuracy_mean": 59.782000000000004,
+    "overall_accuracy_std": 6.979304836443242,
+    "overall_accuracy_values": [
+      64.29,
+      69.23,
+      50.0,
+      53.85,
+      61.54
+    ],
+    "precision_macro_mean": 65.00200000000001,
+    "precision_macro_std": 7.222230680336925,
+    "precision_macro_values": [
+      66.67,
+      77.38,
+      64.29,
+      55.56,
+      61.11
+    ],
+    "recall_macro_mean": 61.666,
+    "recall_macro_std": 8.300468902417501,
+    "recall_macro_values": [
+      66.67,
+      73.33,
+      48.33,
+      60.0,
+      60.0
+    ],
+    "f1_macro_mean": 59.27,
+    "f1_macro_std": 7.3516256705575,
+    "f1_macro_values": [
+      63.37,
+      69.84,
+      48.18,
+      55.0,
+      59.96
+    ],
+    "cohen_kappa_mean": 0.49474,
+    "cohen_kappa_std": 0.12406971588586795,
+    "cohen_kappa_values": [
+      0.6154,
+      0.6232,
+      0.2821,
+      0.473,
+      0.48
+    ],
+    "auc_macro_mean": 0.72446,
+    "auc_macro_std": 0.03416668552845008,
+    "auc_macro_values": [
+      0.7259,
+      0.7417,
+      0.6611,
+      0.7306,
+      0.763
+    ],
+    "auc_micro_mean": 0.7407,
+    "auc_micro_std": 0.030591959728006962,
+    "auc_micro_values": [
+      0.7653,
+      0.7604,
+      0.6837,
+      0.7337,
+      0.7604
+    ],
+    "frail_sensitivity_mean": 75.0,
+    "frail_sensitivity_std": 31.622776601683793,
+    "frail_sensitivity_values": [
+      100.0,
+      100.0,
+      25.0,
+      100.0,
+      50.0
+    ],
+    "frail_specificity_mean": 91.77799999999999,
+    "frail_specificity_std": 7.555470600829573,
+    "frail_specificity_values": [
+      100.0,
+      90.0,
+      100.0,
+      80.0,
+      88.89
+    ],
+    "frail_precision_mean": 80.334,
+    "frail_precision_std": 16.74593156560721,
+    "frail_precision_values": [
+      100.0,
+      75.0,
+      100.0,
+      60.0,
+      66.67
+    ],
+    "prefrail_sensitivity_mean": 50.0,
+    "prefrail_sensitivity_std": 20.0,
+    "prefrail_sensitivity_values": [
+      20.0,
+      80.0,
+      60.0,
+      40.0,
+      50.0
+    ],
+    "prefrail_specificity_mean": 69.446,
+    "prefrail_specificity_std": 12.13951827709815,
+    "prefrail_specificity_values": [
+      88.89,
+      62.5,
+      55.56,
+      62.5,
+      77.78
+    ],
+    "prefrail_precision_mean": 48.0,
+    "prefrail_precision_std": 6.032564960280163,
+    "prefrail_precision_values": [
+      50.0,
+      57.14,
+      42.86,
+      40.0,
+      50.0
+    ],
+    "nonfrail_sensitivity_mean": 60.0,
+    "nonfrail_sensitivity_std": 17.88854381999832,
+    "nonfrail_sensitivity_values": [
+      80.0,
+      40.0,
+      60.0,
+      40.0,
+      80.0
+    ],
+    "nonfrail_specificity_mean": 76.946,
+    "nonfrail_specificity_std": 15.553892888920124,
+    "nonfrail_specificity_values": [
+      55.56,
+      100.0,
+      66.67,
+      87.5,
+      75.0
+    ],
+    "nonfrail_precision_mean": 66.668,
+    "nonfrail_precision_std": 18.25741865653521,
+    "nonfrail_precision_values": [
+      50.0,
+      100.0,
+      50.0,
+      66.67,
+      66.67
+    ]
+  },
+  "Heavy_Frozen": {
+    "overall_accuracy_mean": 61.21,
+    "overall_accuracy_std": 2.2968674319603224,
+    "overall_accuracy_values": [
+      57.14,
+      61.54,
+      64.29,
+      61.54,
+      61.54
+    ],
+    "precision_macro_mean": 62.331999999999994,
+    "precision_macro_std": 9.638938530771942,
+    "precision_macro_values": [
+      48.15,
+      58.89,
+      74.07,
+      72.22,
+      58.33
+    ],
+    "recall_macro_mean": 62.778,
+    "recall_macro_std": 2.2230015744483858,
+    "recall_macro_values": [
+      60.0,
+      66.67,
+      63.33,
+      62.22,
+      61.67
+    ],
+    "f1_macro_mean": 59.222,
+    "f1_macro_std": 4.029676910125674,
+    "f1_macro_values": [
+      52.38,
+      58.77,
+      62.7,
+      63.85,
+      58.41
+    ],
+    "cohen_kappa_mean": 0.5307599999999999,
+    "cohen_kappa_std": 0.05841977747304416,
+    "cohen_kappa_values": [
+      0.5484,
+      0.586,
+      0.44,
+      0.4882,
+      0.5912
+    ],
+    "auc_macro_mean": 0.72036,
+    "auc_macro_std": 0.05510218144502085,
+    "auc_macro_values": [
+      0.8,
+      0.7694,
+      0.6528,
+      0.6889,
+      0.6907
+    ],
+    "auc_micro_mean": 0.7458,
+    "auc_micro_std": 0.06225688716921207,
+    "auc_micro_values": [
+      0.8316,
+      0.7929,
+      0.6607,
+      0.6953,
+      0.7485
+    ],
+    "frail_sensitivity_mean": 83.334,
+    "frail_sensitivity_std": 21.081324057089013,
+    "frail_sensitivity_values": [
+      100.0,
+      100.0,
+      50.0,
+      66.67,
+      100.0
+    ],
+    "frail_specificity_mean": 91.556,
+    "frail_specificity_std": 10.365546005879285,
+    "frail_specificity_values": [
+      100.0,
+      80.0,
+      100.0,
+      100.0,
+      77.78
+    ],
+    "frail_precision_mean": 85.334,
+    "frail_precision_std": 18.08552526193254,
+    "frail_precision_values": [
+      100.0,
+      60.0,
+      100.0,
+      100.0,
+      66.67
+    ],
+    "prefrail_sensitivity_mean": 45.0,
+    "prefrail_sensitivity_std": 38.2099463490856,
+    "prefrail_sensitivity_values": [
+      0.0,
+      20.0,
+      100.0,
+      80.0,
+      25.0
+    ],
+    "prefrail_specificity_mean": 71.946,
+    "prefrail_specificity_std": 16.206106997055155,
+    "prefrail_specificity_values": [
+      88.89,
+      87.5,
+      55.56,
+      50.0,
+      77.78
+    ],
+    "prefrail_precision_mean": 37.778,
+    "prefrail_precision_std": 20.307220784735662,
+    "prefrail_precision_values": [
+      0.0,
+      50.0,
+      55.56,
+      50.0,
+      33.33
+    ],
+    "nonfrail_sensitivity_mean": 60.0,
+    "nonfrail_sensitivity_std": 17.88854381999832,
+    "nonfrail_sensitivity_values": [
+      80.0,
+      80.0,
+      40.0,
+      40.0,
+      60.0
+    ],
+    "nonfrail_specificity_mean": 76.666,
+    "nonfrail_specificity_std": 16.884714507506487,
+    "nonfrail_specificity_values": [
+      44.44,
+      75.0,
+      88.89,
+      87.5,
+      87.5
+    ],
+    "nonfrail_precision_mean": 63.89,
+    "nonfrail_precision_std": 10.2461680642082,
+    "nonfrail_precision_values": [
+      44.44,
+      66.67,
+      66.67,
+      66.67,
+      75.0
+    ]
+  },
+  "All_Frozen": {
+    "overall_accuracy_mean": 58.134,
+    "overall_accuracy_std": 4.175895592564547,
+    "overall_accuracy_values": [
+      57.14,
+      61.54,
+      64.29,
+      53.85,
+      53.85
+    ],
+    "precision_macro_mean": 53.314,
+    "precision_macro_std": 14.164378701517409,
+    "precision_macro_values": [
+      48.15,
+      75.0,
+      64.44,
+      39.81,
+      39.17
+    ],
+    "recall_macro_mean": 57.668000000000006,
+    "recall_macro_std": 7.422458891768954,
+    "recall_macro_values": [
+      60.0,
+      66.67,
+      63.33,
+      46.67,
+      51.67
+    ],
+    "f1_macro_mean": 52.09400000000001,
+    "f1_macro_std": 8.776173653705811,
+    "f1_macro_values": [
+      52.38,
+      60.2,
+      63.29,
+      41.27,
+      43.33
+    ],
+    "cohen_kappa_mean": 0.4412,
+    "cohen_kappa_std": 0.08112698687859668,
+    "cohen_kappa_values": [
+      0.5484,
+      0.5185,
+      0.4024,
+      0.3276,
+      0.4091
+    ],
+    "auc_macro_mean": 0.69054,
+    "auc_macro_std": 0.04080473501935772,
+    "auc_macro_values": [
+      0.7333,
+      0.7333,
+      0.6241,
+      0.675,
+      0.687
+    ],
+    "auc_micro_mean": 0.69612,
+    "auc_micro_std": 0.05674858236114805,
+    "auc_micro_values": [
+      0.7679,
+      0.7485,
+      0.6122,
+      0.6893,
+      0.6627
+    ],
+    "frail_sensitivity_mean": 50.0,
+    "frail_sensitivity_std": 44.721359549995796,
+    "frail_sensitivity_values": [
+      100.0,
+      100.0,
+      50.0,
+      0.0,
+      0.0
+    ],
+    "frail_specificity_mean": 96.0,
+    "frail_specificity_std": 4.898979485566356,
+    "frail_specificity_values": [
+      100.0,
+      90.0,
+      90.0,
+      100.0,
+      100.0
+    ],
+    "frail_precision_mean": 48.334,
+    "frail_precision_std": 40.960984167863934,
+    "frail_precision_values": [
+      100.0,
+      75.0,
+      66.67,
+      0.0,
+      0.0
+    ],
+    "prefrail_sensitivity_mean": 63.0,
+    "prefrail_sensitivity_std": 31.559467676119,
+    "prefrail_sensitivity_values": [
+      0.0,
+      80.0,
+      80.0,
+      80.0,
+      75.0
+    ],
+    "prefrail_specificity_mean": 59.722,
+    "prefrail_specificity_std": 19.99368740377822,
+    "prefrail_specificity_values": [
+      88.89,
+      50.0,
+      77.78,
+      37.5,
+      44.44
+    ],
+    "prefrail_precision_mean": 39.722,
+    "prefrail_precision_std": 22.076530886894346,
+    "prefrail_precision_values": [
+      0.0,
+      50.0,
+      66.67,
+      44.44,
+      37.5
+    ],
+    "nonfrail_sensitivity_mean": 60.0,
+    "nonfrail_sensitivity_std": 21.908902300206645,
+    "nonfrail_sensitivity_values": [
+      80.0,
+      20.0,
+      60.0,
+      60.0,
+      80.0
+    ],
+    "nonfrail_specificity_mean": 79.444,
+    "nonfrail_specificity_std": 18.870062639005734,
+    "nonfrail_specificity_values": [
+      44.44,
+      100.0,
+      77.78,
+      87.5,
+      87.5
+    ],
+    "nonfrail_precision_mean": 71.888,
+    "nonfrail_precision_std": 18.76427925607589,
+    "nonfrail_precision_values": [
+      44.44,
+      100.0,
+      60.0,
+      75.0,
+      80.0
+    ]
+  }
+}

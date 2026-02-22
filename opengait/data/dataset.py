@@ -7,12 +7,13 @@ from utils import get_msg_mgr
 
 
 class DataSet(tordata.Dataset):
-    def __init__(self, data_cfg, training):
+    def __init__(self, data_cfg, training, use_val_set=False):
         """
             seqs_info: the list with each element indicating 
                             a certain gait sequence presented as [label, type, view, paths];
+            use_val_set: If True and training=False, use VAL_SET instead of TEST_SET
         """
-        self.__dataset_parser(data_cfg, training)
+        self.__dataset_parser(data_cfg, training, use_val_set)
         self.cache = data_cfg['cache']
         self.label_list = [seq_info[0] for seq_info in self.seqs_info]
         self.types_list = [seq_info[1] for seq_info in self.seqs_info]
@@ -66,7 +67,7 @@ class DataSet(tordata.Dataset):
         for idx in range(len(self)):
             self.__getitem__(idx)
 
-    def __dataset_parser(self, data_config, training):
+    def __dataset_parser(self, data_config, training, use_val_set=False):
         dataset_root = data_config['dataset_root']
         try:
             data_in_use = data_config['data_in_use']  # [n], true or false
@@ -77,11 +78,15 @@ class DataSet(tordata.Dataset):
             partition = json.load(f)
         train_set = partition["TRAIN_SET"]
         test_set = partition["TEST_SET"]
+        # Support VAL_SET for validation during training
+        val_set = partition.get("VAL_SET", [])
         label_list = os.listdir(dataset_root)
         train_set = [label for label in train_set if label in label_list]
         test_set = [label for label in test_set if label in label_list]
-        miss_pids = [label for label in label_list if label not in (
-            train_set + test_set)]
+        val_set = [label for label in val_set if label in label_list]
+        # Include VAL_SET in miss_pids calculation
+        all_used_pids = train_set + test_set + val_set
+        miss_pids = [label for label in label_list if label not in all_used_pids]
         msg_mgr = get_msg_mgr()
 
         def log_pid_list(pid_list):
@@ -98,8 +103,12 @@ class DataSet(tordata.Dataset):
             msg_mgr.log_info("-------- Train Pid List --------")
             log_pid_list(train_set)
         else:
-            msg_mgr.log_info("-------- Test Pid List --------")
-            log_pid_list(test_set)
+            if use_val_set and len(val_set) > 0:
+                msg_mgr.log_info("-------- Val Pid List --------")
+                log_pid_list(val_set)
+            else:
+                msg_mgr.log_info("-------- Test Pid List --------")
+                log_pid_list(test_set)
 
         def get_seqs_info_list(label_set):
             seqs_info_list = []
@@ -121,5 +130,17 @@ class DataSet(tordata.Dataset):
                                 'Find no .pkl file in %s-%s-%s.' % (lab, typ, vie))
             return seqs_info_list
 
-        self.seqs_info = get_seqs_info_list(
-            train_set) if training else get_seqs_info_list(test_set)
+        # Sort train_set and test_set to ensure deterministic dataset order
+        # This is critical for reproducibility - the order affects seqs_info_list
+        # which determines dataset item indices and sampling behavior
+        if training:
+            train_set = sorted(train_set)
+            self.seqs_info = get_seqs_info_list(train_set)
+        else:
+            # Use VAL_SET if requested and available, otherwise use TEST_SET
+            if use_val_set and len(val_set) > 0:
+                val_set = sorted(val_set)
+                self.seqs_info = get_seqs_info_list(val_set)
+            else:
+                test_set = sorted(test_set)
+                self.seqs_info = get_seqs_info_list(test_set)

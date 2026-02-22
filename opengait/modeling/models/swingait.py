@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from ..base_model import BaseModel
 from ..modules import HorizontalPoolingPyramid, PackSequenceWrapper, SeparateFCs, SeparateBNNecks, SetBlockWrapper, ParallelBN1d
+import torch.utils.checkpoint as checkpoint
 
 # ******* Copy from https://github.com/haofanwang/video-swin-transformer-pytorch/blob/main/video_swin_transformer.py *******
 from functools import reduce, lru_cache
@@ -153,7 +154,7 @@ class WindowAttention3D(nn.Module):
         proj_drop (float, optional): Dropout ratio of output. Default: 0.0
     """
 
-    def __init__(self, dim, window_size, num_heads, qkv_bias=False, qk_scale=None, attn_drop=0., proj_drop=0.):
+    def __init__(self, dim, window_size, num_heads, qkv_bias=False, qk_scale=None, attn_drop=0.1, proj_drop=0.1):
 
         super().__init__()
         self.dim = dim
@@ -275,8 +276,8 @@ class SwinTransformerBlock3D(nn.Module):
     """
 
     def __init__(self, dim, num_heads, window_size=(2,7,7), shift_size=(0,0,0),
-                 mlp_ratio=4., qkv_bias=True, qk_scale=None, drop=0., attn_drop=0., drop_path=0.,
-                 act_layer=nn.GELU, norm_layer=nn.LayerNorm, use_checkpoint=False):
+                 mlp_ratio=4., qkv_bias=True, qk_scale=None, drop=0.4, attn_drop=0.4, drop_path=0.4,
+                 act_layer=nn.GELU, norm_layer=nn.LayerNorm, use_checkpoint=True):
         super().__init__()
         self.dim = dim
         self.num_heads = num_heads
@@ -654,11 +655,15 @@ class SwinTransformer3D(nn.Module):
 
         if self.frozen_stages >= 1:
             self.pos_drop.eval()
+            for param in self.pos_drop.parameters():
+                param.requires_grad = False
+            
             for i in range(0, self.frozen_stages):
-                m = self.layers[i]
-                m.eval()
-                for param in m.parameters():
-                    param.requires_grad = False
+                if i < len(self.layers):
+                    m = self.layers[i]
+                    m.eval()
+                    for param in m.parameters():
+                        param.requires_grad = False
 
     def inflate_weights(self, logger):
         """Inflate the swin2d parameters to swin3d.
@@ -775,8 +780,6 @@ def conv1x1(in_planes, out_planes, stride=1):
     """1x1 convolution"""
     return nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride, bias=False)
 
-# import copy
-
 from ..modules import BasicBlock2D, BasicBlockP3D
 
 import torch.optim as optim
@@ -784,10 +787,33 @@ import os.path as osp
 from collections import OrderedDict
 from utils import get_valid_args, get_attr_from
 
+class DeterministicUpsample2d(nn.Module):
+    """Deterministic upsampling using nearest neighbor interpolation.
+    
+    Args:
+        size: Target output size (H, W)
+    """
+    def __init__(self, size):
+        super(DeterministicUpsample2d, self).__init__()
+        self.size = size
+    
+    def forward(self, x):
+        if x.dim() == 5:
+            B, S, C, H, W = x.shape
+            x = x.view(B * S, C, H, W)
+            x = F.interpolate(x, size=self.size, mode='nearest', align_corners=None)
+            _, C, H_out, W_out = x.shape
+            x = x.view(B, S, C, H_out, W_out)
+        else:
+            x = F.interpolate(x, size=self.size, mode='nearest', align_corners=None)
+        return x
+
+
 class SwinGait(BaseModel):
     def __init__(self, cfgs, training): 
         self.T_max_iter = cfgs['trainer_cfg']['T_max_iter']
         super(SwinGait, self).__init__(cfgs, training=training)
+
 
     def build_network(self, model_cfg):
         channels = model_cfg['Backbone']['channels']
@@ -803,8 +829,15 @@ class SwinGait(BaseModel):
         self.layer1 = SetBlockWrapper(self.make_layer(BasicBlock2D, channels[0], stride=[1, 1], blocks_num=layers[0], mode='2d'))
         self.layer2 = self.make_layer(BasicBlockP3D, channels[1], stride=[2, 2], blocks_num=layers[1], mode='p3d')
 
-        self.ulayer = SetBlockWrapper(nn.UpsamplingBilinear2d(size=(30, 20)))
+        self.ulayer = SetBlockWrapper(DeterministicUpsample2d(size=(30, 20)))
 
+        transformer_cfg = model_cfg.get('SwinTransformerBlock3D', {})
+        frozen_stages = transformer_cfg.get('frozen_stages', -1)
+        drop_rate = transformer_cfg.get('drop', 0.4)
+        attn_drop_rate = transformer_cfg.get('attn_drop', 0.3)
+        drop_path_rate = transformer_cfg.get('drop_path', 0.3)
+        use_checkpoint = transformer_cfg.get('use_checkpoint', False)
+        
         self.transformer = SwinTransformer3D(
             patch_size = [1, 2, 2], 
             in_chans = channels[1], 
@@ -813,14 +846,51 @@ class SwinGait(BaseModel):
             num_heads = [16, 32], 
             window_size = [3, 3, 5], 
             downsample = [1, 0], 
-            drop_path_rate = 0.1, 
-            patch_norm = True, 
+            drop_rate = drop_rate,
+            attn_drop_rate = attn_drop_rate,
+            drop_path_rate = drop_path_rate, 
+            patch_norm = True,
+            frozen_stages = frozen_stages,
+            use_checkpoint = use_checkpoint
         )
+        
+        self.use_checkpoint = use_checkpoint
 
         self.FCs = SeparateFCs(model_cfg['SeparateBNNecks']['parts_num'], in_channels=512, out_channels=256)
         self.BNNecks = SeparateBNNecks(**model_cfg['SeparateBNNecks'])
         self.TP = PackSequenceWrapper(torch.max)
         self.HPP = HorizontalPoolingPyramid(bin_num=model_cfg['bin_num'])
+        
+        self.backbone_lr = model_cfg.get('backbone_lr', None)
+        self.freeze_layers = model_cfg['Backbone'].get('freeze_layers', True)
+        
+        # Freeze layers at the end of build_network
+        self._freeze_layers()
+
+    def _freeze_layers(self):
+        """Freeze early CNN layers based on config. FCs and BNNecks always remain trainable."""
+        if self.freeze_layers:
+            for param in self.layer0.parameters():
+                param.requires_grad = False
+            for param in self.layer1.parameters():
+                param.requires_grad = False
+            for param in self.layer2.parameters():
+                param.requires_grad = False
+        else:
+            for param in self.layer0.parameters():
+                param.requires_grad = True
+            for param in self.layer1.parameters():
+                param.requires_grad = True
+            for param in self.layer2.parameters():
+                param.requires_grad = True
+        
+        # Keep ulayer, classification head always trainable
+        for param in self.ulayer.parameters():
+            param.requires_grad = True
+        for param in self.FCs.parameters():
+            param.requires_grad = True
+        for param in self.BNNecks.parameters():
+            param.requires_grad = True
 
     def get_optimizer(self, optimizer_cfg):
         self.msg_mgr.log_info(optimizer_cfg)
@@ -829,21 +899,101 @@ class SwinGait(BaseModel):
 
         transformer_no_decay = ['patch_embed', 'norm', 'relative_position_bias_table']
         transformer_params = list(self.transformer.named_parameters())
+        base_lr = optimizer_cfg['lr']
+        
         params_list = [
-            {'params': [p for n, p in transformer_params if any(nd in n for nd in transformer_no_decay)], 'lr': optimizer_cfg['lr'], 'weight_decay': 0.}, 
-            {'params': [p for n, p in transformer_params if not any(nd in n for nd in transformer_no_decay)], 'lr': optimizer_cfg['lr'], 'weight_decay': optimizer_cfg['weight_decay']}, 
-            {'params': self.FCs.parameters(), 'lr': optimizer_cfg['lr'] * 0.1, 'weight_decay': optimizer_cfg['weight_decay']}, 
-            {'params': self.BNNecks.parameters(), 'lr': optimizer_cfg['lr'] * 0.1, 'weight_decay': optimizer_cfg['weight_decay']}, 
+            {'params': [p for n, p in transformer_params if any(nd in n for nd in transformer_no_decay)], 'lr': base_lr, 'initial_lr': base_lr, 'weight_decay': 0.}, 
+            {'params': [p for n, p in transformer_params if not any(nd in n for nd in transformer_no_decay)], 'lr': base_lr, 'initial_lr': base_lr, 'weight_decay': optimizer_cfg['weight_decay']}, 
+            {'params': self.FCs.parameters(), 'lr': base_lr * 0.1, 'initial_lr': base_lr * 0.1, 'weight_decay': optimizer_cfg['weight_decay']}, 
+            {'params': self.BNNecks.parameters(), 'lr': base_lr * 0.1, 'initial_lr': base_lr * 0.1, 'weight_decay': optimizer_cfg['weight_decay']}, 
         ]
-        for i in range(5): 
-            if hasattr(self, 'layer%d'%i): 
+        
+        if self.backbone_lr is not None and len(self.backbone_lr) > 0:
+            self.msg_mgr.log_info(f"Using backbone_lr: {self.backbone_lr}")
+            
+            for i in [0, 1, 2]:
+                if hasattr(self, 'layer%d'%i): 
+                    if i < len(self.backbone_lr):
+                        layer_lr = self.backbone_lr[i]
+                    else:
+                        layer_lr = base_lr * 0.1  # Fallback
+                    
+                    layer_name = f'layer{i}'
+                    params_list.append(
+                        {'params': getattr(self, layer_name).parameters(), 'lr': layer_lr, 'initial_lr': layer_lr, 'weight_decay': optimizer_cfg['weight_decay']}
+                    )
+                    self.msg_mgr.log_info(f"  {layer_name}: lr = {layer_lr}")
+            
+            if hasattr(self, 'ulayer'):
+                ulayer_idx = 3
+                if ulayer_idx < len(self.backbone_lr):
+                    ulayer_lr = self.backbone_lr[ulayer_idx]
+                    params_list.append(
+                        {'params': self.ulayer.parameters(), 'lr': ulayer_lr, 'initial_lr': ulayer_lr, 'weight_decay': optimizer_cfg['weight_decay']}
+                    )
+                    self.msg_mgr.log_info(f"  ulayer: lr = {ulayer_lr}")
+                else:
+                    fallback_lr = base_lr * 0.1
+                    params_list.append(
+                        {'params': self.ulayer.parameters(), 'lr': fallback_lr, 'initial_lr': fallback_lr, 'weight_decay': optimizer_cfg['weight_decay']}
+                    )
+        else:
+            for i in [0, 1, 2]: 
+                if hasattr(self, 'layer%d'%i): 
+                    fallback_lr = base_lr * 0.1
+                    params_list.append(
+                        {'params': getattr(self, 'layer%d'%i).parameters(), 'lr': fallback_lr, 'initial_lr': fallback_lr, 'weight_decay': optimizer_cfg['weight_decay']}
+                    )
+            if hasattr(self, 'ulayer'):
+                fallback_lr = base_lr * 0.1
                 params_list.append(
-                    {'params': getattr(self, 'layer%d'%i).parameters(), 'lr': optimizer_cfg['lr'] * 0.1, 'weight_decay': optimizer_cfg['weight_decay']}
+                    {'params': self.ulayer.parameters(), 'lr': fallback_lr, 'initial_lr': fallback_lr, 'weight_decay': optimizer_cfg['weight_decay']}
                 )
 
         optimizer = optimizer(params_list)
+        
+        self.backbone_fixed_lrs = {}
+        if self.backbone_lr is not None and len(self.backbone_lr) > 0:
+            backbone_param_group_indices = []
+            for i in [0, 1, 2]:
+                if hasattr(self, 'layer%d'%i):
+                    layer_name = f'layer{i}'
+                    layer_params = set(getattr(self, layer_name).parameters())
+                    for idx, param_group in enumerate(optimizer.param_groups):
+                        param_set = set(param_group['params'])
+                        if layer_params.issubset(param_set):
+                            backbone_param_group_indices.append(idx)
+                            if i < len(self.backbone_lr):
+                                self.backbone_fixed_lrs[idx] = self.backbone_lr[i]
+                            break
+            
+            if hasattr(self, 'ulayer'):
+                ulayer_params = set(self.ulayer.parameters())
+                for idx, param_group in enumerate(optimizer.param_groups):
+                    param_set = set(param_group['params'])
+                    if ulayer_params.issubset(param_set):
+                        backbone_param_group_indices.append(idx)
+                        ulayer_idx = 3
+                        if ulayer_idx < len(self.backbone_lr):
+                            self.backbone_fixed_lrs[idx] = self.backbone_lr[ulayer_idx]
+                        break
+            
         return optimizer
-
+    
+    def _restore_backbone_lr(self):
+        """Restore backbone learning rates to their fixed values after scheduler updates."""
+        if hasattr(self, 'backbone_fixed_lrs') and self.backbone_fixed_lrs:
+            for idx, fixed_lr in self.backbone_fixed_lrs.items():
+                if idx < len(self.optimizer.param_groups):
+                    self.optimizer.param_groups[idx]['lr'] = fixed_lr
+    
+    def train_step(self, loss_sum) -> bool:
+        """Override train_step to restore backbone learning rates after scheduler updates."""
+        result = super().train_step(loss_sum)
+        self._restore_backbone_lr()
+        
+        return result
+    
     def init_parameters(self):
         for m in self.modules():
             if isinstance(m, nn.Linear):
@@ -888,42 +1038,62 @@ class SwinGait(BaseModel):
     def forward(self, inputs):
         if self.training:
             adjust_learning_rate(self.optimizer, self.iteration, T_max_iter=self.T_max_iter)
-        ipts, labs, _, _, seqL = inputs
+            self._restore_backbone_lr()
+        ipts, labs, class_id, _, seqL = inputs
+
+        # Map frailty status to class indices: Frail=0, Prefrail=1, Nonfrail=2
+        class_id_int = np.array([1 if status == 'Prefrail' else 2 if status == 'Nonfrail' else 0 for status in class_id])
+        class_id = torch.tensor(class_id_int).to(labs.device)
 
         sils = ipts[0].unsqueeze(1)
-
         del ipts
 
-        out0 = self.layer0(sils)
-        out1 = self.layer1(out0)
-        out2 = self.layer2(out1) # [n, c, s, h, w]
+        if not self.use_checkpoint:
+            with torch.no_grad():
+                out0 = self.layer0(sils)
+                out1 = self.layer1(out0)
+                del out0
+                out2 = self.layer2(out1)
+                del out1
+        else:
+            out0 = self.layer0(sils)
+            out1 = self.layer1(out0)
+            del out0
+            out2 = self.layer2(out1)
+            del out1
+
         out2 = self.ulayer(out2)
-        out4 = self.transformer(out2) # [n, 768, s/4, 4, 3]
+        out4 = self.transformer(out2)
+        del out2
 
         # Temporal Pooling, TP
-        outs = self.TP(out4, seqL, options={"dim": 2})[0]  # [n, c, h, w]
-        # Horizontal Pooling Matching, HPM
-        feat = self.HPP(outs)  # [n, c, p]
+        outs = self.TP(out4, seqL, options={"dim": 2})[0]
+        del out4
 
+        # Horizontal Pooling Matching, HPM
+        feat = self.HPP(outs)
+        del outs
+        
         feat = torch.cat([feat, feat[:, :, -1].clone().detach().unsqueeze(-1)], dim=-1)
-        embed_1 = self.FCs(feat)  # [n, c, p]
-        embed_2, logits = self.BNNecks(embed_1)  # [n, c, p]
-        embed_1 = embed_1.contiguous()[:, :, :-1]  # [n, p, c]
-        embed_2 = embed_2.contiguous()[:, :, :-1]  # [n, p, c]
-        logits = logits.contiguous()[:, :, :-1]  # [n, p, c]
+        embed_1 = self.FCs(feat)
+        embed_2, logits = self.BNNecks(embed_1)
+
+        embed_1 = embed_1.contiguous()[:, :, :-1]
+        embed_2 = embed_2.contiguous()[:, :, :-1]
+        logits = logits.contiguous()[:, :, :-1]
 
         embed = embed_1
 
         retval = {
             'training_feat': {
                 'triplet': {'embeddings': embed_1, 'labels': labs},
-                'softmax': {'logits': logits, 'labels': labs}
+                'softmax': {'logits': logits, 'labels': class_id}
             },
             'visual_summary': {
                 'image/sils': rearrange(sils,'n c s h w -> (n s) c h w')
             },
             'inference_feat': {
-                'embeddings': embed
+                'embeddings': logits
             }
         }
         return retval

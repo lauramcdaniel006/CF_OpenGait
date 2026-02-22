@@ -1,0 +1,121 @@
+{
+  "model_name": "SwinGait (UF)",
+  "summary": {
+    "accuracy_mean": 0.4909,
+    "accuracy_std": 0.09274332320981386,
+    "accuracy_values": [
+      0.4545,
+      0.6364,
+      0.4545,
+      0.5455,
+      0.3636
+    ],
+    "precision_mean": 0.43048000000000003,
+    "precision_std": 0.14118538734585814,
+    "precision_values": [
+      0.3095,
+      0.6389,
+      0.3651,
+      0.5556,
+      0.2833
+    ],
+    "recall_mean": 0.50558,
+    "recall_std": 0.08497843020437598,
+    "recall_values": [
+      0.4167,
+      0.6389,
+      0.5,
+      0.5556,
+      0.4167
+    ],
+    "f1_mean": 0.45176,
+    "f1_std": 0.12054449137144344,
+    "f1_values": [
+      0.34850000000000003,
+      0.6389,
+      0.39049999999999996,
+      0.5476,
+      0.3333
+    ],
+    "auc_macro_mean": 0.64726,
+    "auc_macro_std": 0.10308754725959872,
+    "auc_macro_values": [
+      0.7302,
+      0.7163,
+      0.5933,
+      0.7282,
+      0.4683
+    ],
+    "auc_micro_mean": 0.6562000000000001,
+    "auc_micro_std": 0.09323168989136686,
+    "auc_micro_values": [
+      0.686,
+      0.7562,
+      0.624,
+      0.7231,
+      0.4917
+    ]
+  },
+  "individual_results": [
+    {
+      "model_name": "SwinGait (UF)",
+      "fold": 1,
+      "checkpoint_iter": 1500,
+      "accuracy": 0.4545,
+      "precision": 0.3095,
+      "recall": 0.4167,
+      "f1": 0.34850000000000003,
+      "auc_macro": 0.7302,
+      "auc_micro": 0.686,
+      "note": "Best checkpoint"
+    },
+    {
+      "model_name": "SwinGait (UF)",
+      "fold": 2,
+      "checkpoint_iter": 500,
+      "accuracy": 0.6364,
+      "precision": 0.6389,
+      "recall": 0.6389,
+      "f1": 0.6389,
+      "auc_macro": 0.7163,
+      "auc_micro": 0.7562,
+      "note": "Best checkpoint"
+    },
+    {
+      "model_name": "SwinGait (UF)",
+      "fold": 3,
+      "checkpoint_iter": 2000,
+      "accuracy": 0.4545,
+      "precision": 0.3651,
+      "recall": 0.5,
+      "f1": 0.39049999999999996,
+      "auc_macro": 0.5933,
+      "auc_micro": 0.624,
+      "note": "Best checkpoint"
+    },
+    {
+      "model_name": "SwinGait (UF)",
+      "fold": 4,
+      "checkpoint_iter": 500,
+      "accuracy": 0.5455,
+      "precision": 0.5556,
+      "recall": 0.5556,
+      "f1": 0.5476,
+      "auc_macro": 0.7282,
+      "auc_micro": 0.7231,
+      "note": "Best checkpoint"
+    },
+    {
+      "model_name": "SwinGait (UF)",
+      "fold": 5,
+      "checkpoint_iter": 9000,
+      "accuracy": 0.3636,
+      "precision": 0.2833,
+      "recall": 0.4167,
+      "f1": 0.3333,
+      "auc_macro": 0.4683,
+      "auc_micro": 0.4917,
+      "note": "Best checkpoint"
+    }
+  ]
+}

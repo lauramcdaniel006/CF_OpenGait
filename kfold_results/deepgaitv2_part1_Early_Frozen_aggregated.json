@@ -1,0 +1,111 @@
+{
+  "model_name": "Early Frozen",
+  "summary": {
+    "accuracy_mean": 0.5351600000000001,
+    "accuracy_std": 0.06896954690296293,
+    "accuracy_values": [
+      0.6429,
+      0.5385,
+      0.5714,
+      0.46149999999999997,
+      0.46149999999999997
+    ],
+    "precision_mean": 0.5181,
+    "precision_std": 0.09756021730193104,
+    "precision_values": [
+      0.6667000000000001,
+      0.39049999999999996,
+      0.5889,
+      0.4722,
+      0.4722
+    ],
+    "recall_mean": 0.56666,
+    "recall_std": 0.07227571099615694,
+    "recall_values": [
+      0.6667000000000001,
+      0.6,
+      0.5832999999999999,
+      0.5333,
+      0.45
+    ],
+    "f1_mean": 0.5182399999999999,
+    "f1_std": 0.07039075507479654,
+    "f1_values": [
+      0.6336999999999999,
+      0.4722,
+      0.5667,
+      0.46299999999999997,
+      0.4556
+    ],
+    "auc_macro_mean": 0.7451800000000001,
+    "auc_macro_std": 0.0400241127322018,
+    "auc_macro_values": [
+      0.7926,
+      0.7361,
+      0.675,
+      0.75,
+      0.7722
+    ],
+    "auc_micro_mean": 0.7547600000000001,
+    "auc_micro_std": 0.0385162095746713,
+    "auc_micro_values": [
+      0.7883,
+      0.784,
+      0.6837,
+      0.7456,
+      0.7722
+    ]
+  },
+  "individual_results": [
+    {
+      "accuracy": 0.6429,
+      "precision": 0.6667000000000001,
+      "recall": 0.6667000000000001,
+      "f1": 0.6336999999999999,
+      "auc_macro": 0.7926,
+      "auc_micro": 0.7883,
+      "fold": 1,
+      "checkpoint_iter": 500
+    },
+    {
+      "accuracy": 0.5385,
+      "precision": 0.39049999999999996,
+      "recall": 0.6,
+      "f1": 0.4722,
+      "auc_macro": 0.7361,
+      "auc_micro": 0.784,
+      "fold": 2,
+      "checkpoint_iter": 5500
+    },
+    {
+      "accuracy": 0.5714,
+      "precision": 0.5889,
+      "recall": 0.5832999999999999,
+      "f1": 0.5667,
+      "auc_macro": 0.675,
+      "auc_micro": 0.6837,
+      "fold": 3,
+      "checkpoint_iter": 1500
+    },
+    {
+      "accuracy": 0.46149999999999997,
+      "precision": 0.4722,
+      "recall": 0.5333,
+      "f1": 0.46299999999999997,
+      "auc_macro": 0.75,
+      "auc_micro": 0.7456,
+      "fold": 4,
+      "checkpoint_iter": 10000
+    },
+    {
+      "accuracy": 0.46149999999999997,
+      "precision": 0.4722,
+      "recall": 0.45,
+      "f1": 0.4556,
+      "auc_macro": 0.7722,
+      "auc_micro": 0.7722,
+      "fold": 5,
+      "checkpoint_iter": 6000
+    }
+  ]
+}

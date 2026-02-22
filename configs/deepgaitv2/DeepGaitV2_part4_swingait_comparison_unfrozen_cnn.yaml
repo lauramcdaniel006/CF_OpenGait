@@ -1,0 +1,109 @@
+data_cfg:
+  dataset_name: REDO_Frailty_ccpg_pt4_deepgaitv2_unfrozen_cnn
+  dataset_root: /cis/net/r38/data/lmcdan11/sils
+  frailty_label_file: /cis/home/lmcdan11/OpenGait_silhall/opengait/frailty_label.csv
+  dataset_partition: /cis/home/lmcdan11/Documents_Swin/CF_OpenGait/FrailtySet.json
+  num_workers: 0
+   # data_in_use: [true]
+  remove_no_gallery: false # Remove probe if no gallery for it
+  test_dataset_name: Dataset_FrailtyGait3D
+  cache: true
+
+evaluator_cfg:
+  enable_float16: true
+  restore_ckpt_strict: false
+  restore_hint: /cis/home/lmcdan11/Documents_Swin/OpenGait/opengait/pts/deepgaitv2_pts/ccpg/DeepGaitV2-60000.pt
+  save_name: REDO_Frailty_ccpg_pt4_deepgaitv2_unfrozen_cnn
+  sampler:
+    batch_shuffle: false
+    batch_size: 2
+    sample_type: all_ordered # all indicates whole sequence used to test, while ordered means input sequence by its natural order; Other options:   fixed_unordered
+    frames_all_limit: 80 # limit the number of sampled frames to prevent out of memory
+  eval_func: evaluate_scoliosis
+  metric: euc # cos
+  transform:
+    - type: BaseSilCuttingTransform
+
+loss_cfg:
+  - loss_term_weight: 1.5
+    margin: 0.25
+    type: TripletLoss
+    log_prefix: triplet
+  - loss_term_weight: 2.0
+    scale: 20
+    type: CrossEntropyLoss
+    log_prefix: softmax
+    log_accuracy: true
+    # PART 4: Baseline Triplet + CE (matched with SwinGait for fair comparison, no class weights)
+
+model_cfg:
+  model: DeepGaitV2
+  Backbone:
+    mode: p3d
+    in_channels: 1
+    layers:
+      - 1
+      - 1
+      - 1
+      - 1
+    channels: 
+      - 64
+      - 128 
+      - 256
+      - 512
+    freeze_layers: false  # PART 4: All CNN layers trainable (layer0-4)
+  SeparateBNNecks:
+    class_num: 3  # PART 4: Frailty classification (3 classes)
+    parts_num: 16
+
+optimizer_cfg:
+  lr: 0.0001  # PART 4: AdamW (matched with SwinGait for fair comparison, instead of SGD)
+  solver: AdamW
+  weight_decay: 0.001  # PART 4: Matched with SwinGait
+
+scheduler_cfg:
+  gamma: 0.5
+  milestones: # Learning Rate Reduction at each milestones
+    - 15000
+    - 30000
+    - 50000
+    - 70000
+    - 90000
+  scheduler: MultiStepLR
+
+trainer_cfg:
+  seed: 42  # Fixed seed for reproducibility
+  enable_float16: false  # PART 4: Match SwinGait (false)
+  fix_BN: true  # PART 4: Match SwinGait
+  log_iter: 100
+  with_test: true
+  optimizer_reset: True
+  restore_ckpt_strict: false
+  restore_hint: /cis/home/lmcdan11/Documents_Swin/OpenGait/opengait/pts/deepgaitv2_pts/ccpg/DeepGaitV2-60000.pt
+  save_iter: 500
+  save_name: REDO_Frailty_ccpg_pt4_deepgaitv2_unfrozen_cnn
+  sync_BN: true
+  T_max_iter: 60000
+  total_iter: 80000
+  find_unused_parameters: true
+  grad_clip: 1.0
+  sampler:
+    batch_shuffle: true
+    batch_size:
+      - 4  # PART 4: Match SwinGait batch size (4 identities)
+      - 4  # PART 4: Match SwinGait batch size (4 samples per identity)
+    frames_num_fixed: 60  # PART 4: Match SwinGait frames
+    frames_skip_num: 3
+    sample_type: fixed_ordered
+    type: TripletSampler
+  transform:
+    - type: Compose
+      trf_cfg:
+        - type: RandomPerspective
+          prob: 0.2
+        - type: BaseSilCuttingTransform
+        - type: RandomHorizontalFlip
+          prob: 0.2
+        - type: RandomRotate
+          prob: 0.2
+

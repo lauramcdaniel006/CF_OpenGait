@@ -416,49 +416,143 @@ def evaluate_CCPG(data, dataset, metric='euc'):
     return result_dict
 
 def evaluate_scoliosis(data, dataset, metric='euc'):
-
-    msg_mgr = get_msg_mgr()
+    from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, confusion_matrix, classification_report, roc_auc_score, cohen_kappa_score
+    import numpy as np
     
-    from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, confusion_matrix
+    msg_mgr = get_msg_mgr()
 
-    logits = np.array(data['embeddings'])
+    from utils import set_seed
+    set_seed(1234)
+
+    logits = np.array(data['embeddings'], dtype=np.float32)
     labels = data['types']
     
-    # Label mapping: negative->0, neutral->1, positive->2  
-    label_map = {'negative': 0, 'neutral': 1, 'positive': 2}
+    label_map = {'Frail': 0, 'Prefrail': 1, 'Nonfrail': 2}
+    class_names = ['Frail', 'Prefrail', 'Nonfrail']
     true_ids = np.array([label_map[status] for status in labels])
     
-    pred_ids = np.argmax(logits.mean(-1), axis=-1)
+    # Average logits over parts dimension, then compute predictions and softmax probabilities
+    logits_mean = logits.mean(-1, dtype=np.float32)
+    pred_ids = np.argmax(logits_mean, axis=-1)
     
-    # Calculate evaluation metrics
-    # Total Accuracy: proportion of correctly predicted samples among all samples
+    if len(logits_mean.shape) == 1:
+        logits_mean = logits_mean.reshape(1, -1)
+    
+    logits_mean = np.clip(logits_mean, -500, 500)
+    exp_logits = np.exp(logits_mean - np.max(logits_mean, axis=1, keepdims=True))
+    probs = exp_logits / (np.sum(exp_logits, axis=1, keepdims=True) + 1e-10)
+    probs = probs / (np.sum(probs, axis=1, keepdims=True) + 1e-10)
+    
+    prob_sums = np.sum(probs, axis=1)
+    if not np.allclose(prob_sums, 1.0, atol=1e-5):
+        msg_mgr.log_warning(f"Probabilities don't sum to 1.0: min={prob_sums.min():.6f}, max={prob_sums.max():.6f}")
+        probs = probs / prob_sums[:, np.newaxis]
+    
+    if os.environ.get('SAVE_PROBS_FOR_ROC', '0') == '1':
+        save_dir = os.path.join('output', 'roc_probabilities')
+        mkdir(save_dir)
+        try:
+            iteration = getattr(msg_mgr, 'iteration', 'final')
+        except:
+            iteration = 'final'
+        model_name = os.environ.get('SAVE_PROBS_MODEL_NAME', '')
+        if model_name:
+            save_file = os.path.join(save_dir, f'probs_{model_name}_iter_{iteration}.npz')
+        else:
+            save_file = os.path.join(save_dir, f'probs_iter_{iteration}.npz')
+        np.savez(save_file, 
+                probs=probs, 
+                true_ids=true_ids, 
+                pred_ids=pred_ids,
+                class_names=class_names)
+        msg_mgr.log_info(f"Saved probabilities to: {save_file}")
+    
     accuracy = accuracy_score(true_ids, pred_ids)
-    
-    # Macro-average Precision: average of precision scores for each class
     precision = precision_score(true_ids, pred_ids, average='macro', zero_division=0)
-    
-    # Macro-average Recall: average of recall scores for each class  
     recall = recall_score(true_ids, pred_ids, average='macro', zero_division=0)
-    
-    # Macro-average F1: average of F1 scores for each class
     f1 = f1_score(true_ids, pred_ids, average='macro', zero_division=0)
+    precision_per_class = precision_score(true_ids, pred_ids, average=None, zero_division=0, labels=[0, 1, 2])
+    recall_per_class = recall_score(true_ids, pred_ids, average=None, zero_division=0, labels=[0, 1, 2])
+    f1_per_class = f1_score(true_ids, pred_ids, average=None, zero_division=0, labels=[0, 1, 2])
+    cm = confusion_matrix(true_ids, pred_ids, labels=[0, 1, 2])
+    cohen_kappa_linear = cohen_kappa_score(true_ids, pred_ids, weights='linear')
     
-    # Confusion matrix (for debugging)
-    # cm = confusion_matrix(true_ids, pred_ids, labels=[0, 1, 2])
-    # class_names = ['Negative', 'Neutral', 'Positive']
+    # Specificity = TN / (TN + FP) for each class
+    specificity_per_class = []
+    for i in range(3):
+        tn = np.sum(cm) - (np.sum(cm[i, :]) + np.sum(cm[:, i]) - cm[i, i])
+        fp = np.sum(cm[:, i]) - cm[i, i]
+        specificity = tn / (tn + fp) if (tn + fp) > 0 else 0.0
+        specificity_per_class.append(specificity)
     
-    # Print results
-    msg_mgr.log_info(f"Total Accuracy: {accuracy*100:.2f}%")
-    msg_mgr.log_info(f"Macro-avg Precision: {precision*100:.2f}%") 
-    msg_mgr.log_info(f"Macro-avg Recall: {recall*100:.2f}%")
-    msg_mgr.log_info(f"Macro-avg F1 Score: {f1*100:.2f}%")
+    msg_mgr.log_info("=" * 70)
+    msg_mgr.log_info("EVALUATION RESULTS")
+    msg_mgr.log_info("=" * 70)
     
-    return {
+    class_id_str = "class_id= " + str(true_ids.tolist())
+    pred_labels_str = "predicted_labels " + str(pred_ids.tolist())
+    msg_mgr.log_info(class_id_str)
+    msg_mgr.log_info(pred_labels_str)
+    
+    msg_mgr.log_info("Confusion Matrix:")
+    cm_str = "["
+    for i in range(3):
+        cm_str += "["
+        for j in range(3):
+            cm_str += str(int(cm[i, j]))
+            if j < 2:
+                cm_str += " "
+        cm_str += "]"
+        if i < 2:
+            cm_str += "\n"
+    cm_str += "]"
+    msg_mgr.log_info(cm_str)
+    
+    msg_mgr.log_info(f"{class_names[0]} Sensitivity (Recall): {recall_per_class[0]*100:.2f}%")
+    msg_mgr.log_info(f"{class_names[0]} Specificity: {specificity_per_class[0]*100:.2f}%")
+    msg_mgr.log_info(f"{class_names[0]} Precision: {precision_per_class[0]*100:.2f}%")
+    msg_mgr.log_info(f"{class_names[1]} Sensitivity (Recall): {recall_per_class[1]*100:.2f}%")
+    msg_mgr.log_info(f"{class_names[1]} Specificity: {specificity_per_class[1]*100:.2f}%")
+    msg_mgr.log_info(f"{class_names[1]} Precision: {precision_per_class[1]*100:.2f}%")
+    msg_mgr.log_info(f"{class_names[2]} Sensitivity (Recall): {recall_per_class[2]*100:.2f}%")
+    msg_mgr.log_info(f"{class_names[2]} Specificity: {specificity_per_class[2]*100:.2f}%")
+    msg_mgr.log_info(f"{class_names[2]} Precision: {precision_per_class[2]*100:.2f}%")
+    
+    msg_mgr.log_info(f"Overall Accuracy: {accuracy*100:.2f}%")
+    msg_mgr.log_info(f"Precision (macro): {precision*100:.2f}%")
+    msg_mgr.log_info(f"Recall (macro): {recall*100:.2f}%")
+    msg_mgr.log_info(f"F1 Score (macro): {f1*100:.2f}%")
+    msg_mgr.log_info(f"Cohen's Kappa (linear weighted): {cohen_kappa_linear:.4f}")
+    
+    try:
+        auc_macro = roc_auc_score(true_ids, probs, average='macro', multi_class='ovr')
+        auc_micro = roc_auc_score(true_ids, probs, average='micro', multi_class='ovr')
+        msg_mgr.log_info(f"ROC AUC (macro): {auc_macro:.4f}")
+        msg_mgr.log_info(f"ROC AUC (micro): {auc_micro:.4f}")
+    except Exception as e:
+        msg_mgr.log_warning(f"Could not compute ROC AUC: {e}")
+        auc_macro = 0.0
+        auc_micro = 0.0
+    
+    msg_mgr.log_info("=" * 70)
+    
+    result_dict = {
         "scalar/test_accuracy/": accuracy,
         "scalar/test_precision/": precision, 
         "scalar/test_recall/": recall,
-        "scalar/test_f1/": f1
+        "scalar/test_f1/": f1,
+        "scalar/test_cohen_kappa_linear/": cohen_kappa_linear,
+        "scalar/test_auc_macro/": auc_macro,
+        "scalar/test_auc_micro/": auc_micro
     }
+    
+    for i, class_name in enumerate(class_names):
+        result_dict[f"scalar/test_precision/{class_name}"] = precision_per_class[i]
+        result_dict[f"scalar/test_recall/{class_name}"] = recall_per_class[i]
+        result_dict[f"scalar/test_specificity/{class_name}"] = specificity_per_class[i]
+        result_dict[f"scalar/test_f1/{class_name}"] = f1_per_class[i]
+    
+    return result_dict
 
 def evaluate_FreeGait(data, dataset, metric='euc'):
     msg_mgr = get_msg_mgr()

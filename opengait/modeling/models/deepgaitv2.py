@@ -62,10 +62,15 @@ class DeepGaitV2(BaseModel):
             self.layer4 = SetBlockWrapper(self.layer4)
 
         self.FCs = SeparateFCs(16, channels[3], channels[2])
-        self.BNNecks = SeparateBNNecks(16, channels[2], class_num=model_cfg['SeparateBNNecks']['class_num'])
+        class_num = model_cfg['SeparateBNNecks']['class_num']
+        self.BNNecks = SeparateBNNecks(16, channels[2], class_num=class_num)
 
         self.TP = PackSequenceWrapper(torch.max)
         self.HPP = HorizontalPoolingPyramid(bin_num=[16])
+        
+        self.freeze_layers = model_cfg['Backbone'].get('freeze_layers', False)
+        
+        self._freeze_layers()
 
     def make_layer(self, block, planes, stride, blocks_num, mode='2d'):
 
@@ -90,8 +95,95 @@ class DeepGaitV2(BaseModel):
             )
         return nn.Sequential(*layers)
 
+    def _freeze_layers(self):
+        """
+        Freeze CNN layers based on config, but keep FCs and BNNecks trainable.
+        
+        Supports multiple formats for freeze_layers:
+        - False/true (boolean): Freeze all layers or none
+        - List of layer indices [0, 1]: Freeze layer0 and layer1 only
+        - List of layer names ['layer0', 'layer1']: Freeze specified layers
+        """
+        # Determine which layers to freeze
+        layers_to_freeze = []
+        
+        if isinstance(self.freeze_layers, bool):
+            if self.freeze_layers:
+                # Freeze all layers (backward compatibility)
+                layers_to_freeze = [0, 1, 2, 3, 4]
+        elif isinstance(self.freeze_layers, list):
+            # Selective freezing: convert layer names to indices if needed
+            layer_name_to_idx = {'layer0': 0, 'layer1': 1, 'layer2': 2, 'layer3': 3, 'layer4': 4}
+            for item in self.freeze_layers:
+                if isinstance(item, str):
+                    if item in layer_name_to_idx:
+                        layers_to_freeze.append(layer_name_to_idx[item])
+                    else:
+                        if hasattr(self, 'msg_mgr') and self.msg_mgr:
+                            self.msg_mgr.log_warning(f"Unknown layer name: {item}, ignoring")
+                elif isinstance(item, int) and 0 <= item <= 4:
+                    layers_to_freeze.append(item)
+                else:
+                    if hasattr(self, 'msg_mgr') and self.msg_mgr:
+                        self.msg_mgr.log_warning(f"Invalid layer index: {item}, ignoring")
+        else:
+            if hasattr(self, 'msg_mgr') and self.msg_mgr:
+                self.msg_mgr.log_warning(f"Invalid freeze_layers value: {self.freeze_layers}, treating as False")
+        
+        # Define all layers
+        all_layers = {
+            0: ('layer0', 'First Conv'),
+            1: ('layer1', 'BasicBlock2D'),
+            2: ('layer2', 'P3D Block'),
+            3: ('layer3', 'P3D Block'),
+            4: ('layer4', 'P3D Block')
+        }
+        
+        # Freeze or unfreeze each layer
+        frozen_layers = []
+        trainable_layers = []
+        
+        for layer_idx, (layer_name, layer_desc) in all_layers.items():
+            layer_obj = getattr(self, layer_name)
+            
+            if layer_idx in layers_to_freeze:
+                # Freeze this layer
+                for param in layer_obj.parameters():
+                    param.requires_grad = False
+                frozen_layers.append(f"{layer_name} ({layer_desc})")
+                if hasattr(self, 'msg_mgr') and self.msg_mgr:
+                    self.msg_mgr.log_info(f"❄️ {layer_name} ({layer_desc}) is FROZEN")
+            else:
+                # Keep this layer trainable
+                for param in layer_obj.parameters():
+                    param.requires_grad = True
+                trainable_layers.append(f"{layer_name} ({layer_desc})")
+                if hasattr(self, 'msg_mgr') and self.msg_mgr:
+                    self.msg_mgr.log_info(f"🔥 {layer_name} ({layer_desc}) is TRAINABLE")
+        
+        # Log summary
+        if hasattr(self, 'msg_mgr') and self.msg_mgr:
+            if frozen_layers:
+                self.msg_mgr.log_info(f"Frozen layers: {', '.join(frozen_layers)}")
+            if trainable_layers:
+                self.msg_mgr.log_info(f"Trainable CNN layers: {', '.join(trainable_layers)}")
+            if not frozen_layers:
+                self.msg_mgr.log_info("All CNN layers are TRAINABLE")
+        
+        # Always keep FCs and BNNecks trainable (task-specific head)
+        for param in self.FCs.parameters():
+            param.requires_grad = True
+        for param in self.BNNecks.parameters():
+            param.requires_grad = True
+        if hasattr(self, 'msg_mgr') and self.msg_mgr:
+            self.msg_mgr.log_info("FCs and BNNecks are TRAINABLE")
+
     def forward(self, inputs):
-        ipts, labs, typs, vies, seqL = inputs
+        ipts, labs, class_id, _, seqL = inputs
+        
+        # Map frailty status to class indices: Frail=0, Prefrail=1, Nonfrail=2
+        class_id_int = np.array([1 if status == 'Prefrail' else 2 if status == 'Nonfrail' else 0 for status in class_id])
+        class_id = torch.tensor(class_id_int).to(labs.device)
         
         if len(ipts[0].size()) == 4:
             sils = ipts[0].unsqueeze(1)
@@ -124,13 +216,13 @@ class DeepGaitV2(BaseModel):
         retval = {
             'training_feat': {
                 'triplet': {'embeddings': embed_1, 'labels': labs},
-                'softmax': {'logits': logits, 'labels': labs}
+                'softmax': {'logits': logits, 'labels': class_id}
             },
             'visual_summary': {
                 'image/sils': rearrange(sils, 'n c s h w -> (n s) c h w'),
             },
             'inference_feat': {
-                'embeddings': embed
+                'embeddings': logits
             }
         }
 

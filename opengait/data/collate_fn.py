@@ -1,7 +1,7 @@
 import math
 import random
 import numpy as np
-from utils import get_msg_mgr
+from utils import get_msg_mgr, set_seed
 
 
 class CollateFn(object):
@@ -37,6 +37,12 @@ class CollateFn(object):
         self.points_in_use = sample_config.get('points_in_use')
 
     def __call__(self, batch):
+        # Set seed BEFORE any random operations for reproducibility
+        # get_batch_seed() returns GPU_rank + batch_counter (or GPU_rank for eval)
+        from data.sampler import get_batch_seed
+        batch_seed = get_batch_seed()  # Gets GPU rank + batch_counter (or GPU rank for eval)
+        set_seed(batch_seed)  # Sets random, numpy, torch seeds
+        
         batch_size = len(batch)
         # currently, the functionality of feature_num is not fully supported yet, it refers to 1 now. We are supposed to make our framework support multiple source of input data, such as silhouette, or skeleton.
         feature_num = len(batch[0][0])
@@ -61,6 +67,7 @@ class CollateFn(object):
                 if self.sampler == 'fixed':
                     frames_num = self.frames_num_fixed
                 else:
+                    # Use deterministic random choice with current seed
                     frames_num = random.choice(
                         list(range(self.frames_num_min, self.frames_num_max+1)))
                 if self.allordered:
@@ -70,6 +77,7 @@ class CollateFn(object):
                         get_msg_mgr().log_debug('Find no frames in the sequence %s-%s-%s.'
                                                 % (str(labs_batch[count]), str(typs_batch[count]), str(vies_batch[count])))
                     count += 1
+                    # Use deterministic np.random.choice with current seed
                     indices = sorted(np.random.choice(
                         indices, frames_num, replace=replace))
                 elif self.ordered:
@@ -79,10 +87,12 @@ class CollateFn(object):
                         seq_len = seq_len * it
                         indices = indices * it
 
+                    # Use deterministic random choice with current seed
                     start = random.choice(list(range(0, seq_len - fs_n + 1)))
                     end = start + fs_n
                     idx_lst = list(range(seq_len))
                     idx_lst = idx_lst[start:end]
+                    # Use deterministic np.random.choice with current seed
                     idx_lst = sorted(np.random.choice(
                         idx_lst, frames_num, replace=False))
                     indices = [indices[i] for i in idx_lst]
@@ -94,6 +104,7 @@ class CollateFn(object):
                                                 % (str(labs_batch[count]), str(typs_batch[count]), str(vies_batch[count])))
 
                     count += 1
+                    # Use deterministic np.random.choice with current seed
                     indices = np.random.choice(
                         indices, frames_num, replace=replace)
 

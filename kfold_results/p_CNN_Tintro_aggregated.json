@@ -1,0 +1,121 @@
+{
+  "model_name": "p+CNN+Tintro",
+  "summary": {
+    "accuracy_mean": 0.43634000000000006,
+    "accuracy_std": 0.06805540683883979,
+    "accuracy_values": [
+      0.4545,
+      0.3636,
+      0.4545,
+      0.5455,
+      0.3636
+    ],
+    "precision_mean": 0.42047999999999996,
+    "precision_std": 0.08784596518907399,
+    "precision_values": [
+      0.3095,
+      0.4833,
+      0.3651,
+      0.5556,
+      0.3889
+    ],
+    "recall_mean": 0.44444,
+    "recall_std": 0.08605769227675117,
+    "recall_values": [
+      0.4167,
+      0.3611,
+      0.5,
+      0.5832999999999999,
+      0.3611
+    ],
+    "f1_mean": 0.40198,
+    "f1_std": 0.06339234654120324,
+    "f1_values": [
+      0.34850000000000003,
+      0.39149999999999996,
+      0.39049999999999996,
+      0.5238,
+      0.3556
+    ],
+    "auc_macro_mean": 0.6269600000000001,
+    "auc_macro_std": 0.05385709238345497,
+    "auc_macro_values": [
+      0.7063,
+      0.6528,
+      0.5456,
+      0.6329,
+      0.5972
+    ],
+    "auc_micro_mean": 0.66114,
+    "auc_micro_std": 0.03990050626245238,
+    "auc_micro_values": [
+      0.6694,
+      0.7025,
+      0.6405,
+      0.6983,
+      0.595
+    ]
+  },
+  "individual_results": [
+    {
+      "model_name": "p+CNN+Tintro",
+      "fold": 1,
+      "checkpoint_iter": 1500,
+      "accuracy": 0.4545,
+      "precision": 0.3095,
+      "recall": 0.4167,
+      "f1": 0.34850000000000003,
+      "auc_macro": 0.7063,
+      "auc_micro": 0.6694,
+      "note": "Best checkpoint"
+    },
+    {
+      "model_name": "p+CNN+Tintro",
+      "fold": 2,
+      "checkpoint_iter": 500,
+      "accuracy": 0.3636,
+      "precision": 0.4833,
+      "recall": 0.3611,
+      "f1": 0.39149999999999996,
+      "auc_macro": 0.6528,
+      "auc_micro": 0.7025,
+      "note": "Best checkpoint"
+    },
+    {
+      "model_name": "p+CNN+Tintro",
+      "fold": 3,
+      "checkpoint_iter": 2000,
+      "accuracy": 0.4545,
+      "precision": 0.3651,
+      "recall": 0.5,
+      "f1": 0.39049999999999996,
+      "auc_macro": 0.5456,
+      "auc_micro": 0.6405,
+      "note": "Best checkpoint"
+    },
+    {
+      "model_name": "p+CNN+Tintro",
+      "fold": 4,
+      "checkpoint_iter": 500,
+      "accuracy": 0.5455,
+      "precision": 0.5556,
+      "recall": 0.5832999999999999,
+      "f1": 0.5238,
+      "auc_macro": 0.6329,
+      "auc_micro": 0.6983,
+      "note": "Best checkpoint"
+    },
+    {
+      "model_name": "p+CNN+Tintro",
+      "fold": 5,
+      "checkpoint_iter": 8000,
+      "accuracy": 0.3636,
+      "precision": 0.3889,
+      "recall": 0.3611,
+      "f1": 0.3556,
+      "auc_macro": 0.5972,
+      "auc_micro": 0.595,
+      "note": "Best checkpoint"
+    }
+  ]
+}
