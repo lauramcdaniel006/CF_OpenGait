@@ -223,6 +223,7 @@ README.md
 
 # Baseline models (not part of core release)
 train_alexnet_vgg16_frailty.py
+calculate_class_weights.py
 
 # Duplicate/malformed config files
 configs/swingait/swin_part3_baseline.yaml.yaml
