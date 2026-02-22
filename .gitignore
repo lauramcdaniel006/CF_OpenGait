@@ -218,6 +218,12 @@ kfold_results/test_k3/
 opengait/evaluation/evaluator.py.backup
 results_visualization/
 
+# Original OpenGait README (not ours to claim)
+README.md
+
+# Baseline models (not part of core release)
+train_alexnet_vgg16_frailty.py
+
 # Duplicate/malformed config files
 configs/swingait/swin_part3_baseline.yaml.yaml
 configs/swingait/swin_testb3.yaml.yaml
