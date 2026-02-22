@@ -1,7 +1,0 @@
-{
-  "accuracy": 0.4,
-  "auc_macro": 0.5764,
-  "auc_micro": 0.62,
-  "fold": 2,
-  "checkpoint_iter": 2500
-}
