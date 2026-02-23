@@ -250,7 +250,13 @@ configs/smplgait/
 configs/swingait/swin_part2_*.yaml
 configs/swingait/swin_part3_*.yaml
 
-# Original OpenGait swingait configs (not frailty-related)
+# Original OpenGait configs (not frailty-related)
+configs/deepgaitv2/DeepGaitV2_casiab.yaml
+configs/deepgaitv2/DeepGaitV2_ccpg.yaml
+configs/deepgaitv2/DeepGaitV2_gait3d.yaml
+configs/deepgaitv2/DeepGaitV2_grew.yaml
+configs/deepgaitv2/DeepGaitV2_oumvlp.yaml
+configs/deepgaitv2/DeepGaitV2_sustech1k.yaml
 configs/swingait/swingait3D_*.yaml
 
 # Duplicate/malformed config files
