@@ -257,6 +257,31 @@ configs/swingait/swin_testb3.yaml.yaml
 # Dataset preprocessing scripts (not needed for frailty pipeline)
 datasets/
 
+# Model files not used for frailty (keep only deepgaitv2.py and swingait.py)
+opengait/modeling/models/baseline.py
+opengait/modeling/models/BigGait.py
+opengait/modeling/models/BigGait_utils/
+opengait/modeling/models/BiggerGait_DINOv2.py
+opengait/modeling/models/denoisinggait.py
+opengait/modeling/models/diffgait_utils/
+opengait/modeling/models/gaitedge.py
+opengait/modeling/models/gaitgl.py
+opengait/modeling/models/gaitgraph1.py
+opengait/modeling/models/gaitgraph2.py
+opengait/modeling/models/gaitpart.py
+opengait/modeling/models/gaitset.py
+opengait/modeling/models/gaitssb.py
+opengait/modeling/models/gaittr.py
+opengait/modeling/models/gln.py
+opengait/modeling/models/lidargaitv2.py
+opengait/modeling/models/lidargaitv2_utils.py
+opengait/modeling/models/msgg.py
+opengait/modeling/models/multigait++.py
+opengait/modeling/models/parsinggait.py
+opengait/modeling/models/sconet.py
+opengait/modeling/models/skeletongait++.py
+opengait/modeling/models/smplgait.py
+
 # Assets from original OpenGait
 assets/
 docs/
