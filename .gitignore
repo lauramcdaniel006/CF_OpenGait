@@ -205,6 +205,10 @@ configs/deepgaitv2/training_commands_all_deepgaitv2.sh
 gradcam_deepgaitv2.py
 gradcam_swingait.py
 
+# Best checkpoint scripts (kept in private repo)
+aggregate_best_checkpoints.py
+evaluate_best_checkpoints_kfold.py
+
 # kfold results/aggregated data (keep only partitions/fold_*.json)
 kfold_results/*.json
 kfold_results/*.csv
