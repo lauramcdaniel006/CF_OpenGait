@@ -59,8 +59,9 @@ FrailtySet.json
 dist/
 build/
 
-# Markdown docs / experiment notes
+# Markdown docs / experiment notes (except our README)
 *.md
+!README.md
 
 # OS files
 .DS_Store
@@ -216,8 +217,7 @@ kfold_results/test_k3/
 opengait/evaluation/evaluator.py.backup
 results_visualization/
 
-# Original OpenGait README (not ours to claim)
-README.md
+# (README.md is allowed via !README.md above)
 
 # Baseline models (not part of core release)
 train_alexnet_vgg16_frailty.py

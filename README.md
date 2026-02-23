@@ -1,0 +1,224 @@
+# CF_OpenGait — Frailty Gait Classification
+
+A framework for classifying frailty levels (Frail, Prefrail, Nonfrail) from gait silhouette sequences, built on [OpenGait](https://github.com/ShiqiYu/OpenGait). Supports **DeepGaitV2** (CNN-based) and **SwinGait** (CNN + Transformer) architectures with configurable layer freezing strategies and k-fold cross-validation.
+
+---
+
+## Prerequisites
+
+- Python 3.8+
+- CUDA-capable GPU(s)
+- Conda (recommended)
+
+---
+
+## Step 1: Clone the Repo
+
+```bash
+git clone https://github.com/lauramcdaniel006/CF_OpenGait.git
+cd CF_OpenGait
+```
+
+---
+
+## Step 2: Install Dependencies
+
+**Dependencies:** pytorch >= 1.10, torchvision, pyyaml, tensorboard, opencv-python, tqdm, py7zr, kornia, einops
+
+**Install by Anaconda:**
+
+```bash
+conda create -n myGait38 python=3.8
+conda activate myGait38
+conda install tqdm pyyaml tensorboard opencv kornia einops -c conda-forge
+conda install pytorch==1.10 torchvision -c pytorch
+```
+
+**Or, install by pip:**
+
+```bash
+pip install tqdm pyyaml tensorboard opencv-python kornia einops
+pip install torch==1.10 torchvision==0.11
+```
+
+---
+
+## Step 3: Prepare the Frailty Dataset
+
+Silhouette sequences must be stored as `.pkl` files in this structure:
+
+```
+sils/
+├── 001/                   ← subject ID
+│   ├── Frail/             ← frailty label (Frail / Prefrail / Nonfrail)
+│   │   └── 000/           ← view/sequence
+│   │       ├── 000.pkl    ← one frame per .pkl
+│   │       ├── 001.pkl
+│   │       └── ...
+│   └── ...
+├── 002/
+└── ...
+```
+
+**Frailty labels** — already included at `opengait/frailty_label.csv`.
+Maps subject IDs → frailty scores (0 = Nonfrail, 1 = Prefrail, 2 = Frail).
+
+---
+
+## Step 4: Download Pretrained Weights
+
+Two pretrained checkpoints are needed (from original OpenGait training on the CCPG dataset):
+
+| Model | File | Hugging Face Link |
+|---|---|---|
+| DeepGaitV2 | `DeepGaitV2-60000.pt` | [Download](https://huggingface.co/opengait/OpenGait/tree/main/CCPG/DeepGaitV2/DeepGaitV2/checkpoints) |
+| SwinGait | `SwinGait3D_B1122_C2-20000.pt` | [Download](https://huggingface.co/opengait/OpenGait/tree/main/CCPG/SwinGait/SwinGait3D_B1122_C2/checkpoints) |
+
+---
+
+## Step 5: Update the Config File
+
+Edit the config YAML (e.g., `configs/deepgaitv2/DeepGaitV2_part4a_B1_partially_frozen.yaml`):
+
+```yaml
+data_cfg:
+  dataset_root: /your/path/to/sils                    # ← your silhouette directory
+  frailty_label_file: opengait/frailty_label.csv       # ← frailty labels (included)
+
+evaluator_cfg:
+  restore_hint: /your/path/to/DeepGaitV2-60000.pt     # ← pretrained weights
+
+trainer_cfg:
+  restore_hint: /your/path/to/DeepGaitV2-60000.pt     # ← same pretrained weights
+```
+
+### Freezing Strategies
+
+Freezing controls which pretrained layers stay fixed vs. fine-tune for frailty classification. The classification head (FCs + BNNecks) is always trainable.
+
+**DeepGaitV2** — 5 CNN blocks (`layer0`–`layer4`), set in `model_cfg.Backbone.freeze_layers`:
+
+```yaml
+freeze_layers: true          # Freeze all CNN layers
+freeze_layers: false         # All layers trainable
+freeze_layers: [0, 1, 2]    # Freeze layers 0–2, layers 3–4 trainable
+```
+
+**SwinGait** — CNN + Transformer, controlled separately:
+
+```yaml
+model_cfg:
+  Backbone:
+    freeze_layers: true/false       # Freeze/unfreeze CNN (layer0–layer2)
+  SwinTransformerBlock3D:
+    frozen_stages: -1               # All transformer stages trainable
+    frozen_stages: 0                # Freeze patch embedding only
+    frozen_stages: 1                # Freeze patch embedding + Stage 1
+    frozen_stages: 2                # Freeze patch embedding + Stages 1–2
+```
+
+---
+
+## Step 6: Run K-Fold Cross-Validation
+
+```bash
+python run_kfold_cross_validation.py \
+  --config configs/deepgaitv2/DeepGaitV2_part4a_B1_partially_frozen.yaml \
+  --k 5 \
+  --device 0,1 \
+  --nproc 2 \
+  --use-existing-partitions
+```
+
+This script:
+1. Loads partition files from `kfold_results/partitions/fold_1.json` through `fold_5.json`
+2. For each fold, rewrites the config to point at that fold's train/test split
+3. Trains the model and evaluates on the test set
+4. Saves checkpoints every 500 iterations
+
+### Key Flags
+
+| Flag | Description |
+|---|---|
+| `--config` | Path to config YAML |
+| `--k` | Number of folds (default: 5) |
+| `--device` | CUDA devices (default: `0,1`) |
+| `--nproc` | Number of processes for distributed training (default: 2) |
+| `--use-existing-partitions` | Reuse `kfold_results/partitions/fold_*.json` instead of creating new splits |
+| `--skip_training` | Skip training, only run evaluation (assumes checkpoints exist) |
+| `--checkpoint_iter` | Evaluate a specific checkpoint iteration (default: auto-selects best) |
+| `--best_metric` | Metric for auto-selecting best checkpoint: `accuracy`, `auc_macro`, `f1`, `precision`, `recall` |
+
+---
+
+## Step 7: Aggregate Results Across Folds
+
+After training completes, aggregate metrics across all k folds.
+
+**1. Identify the best checkpoint iteration** for each fold by reviewing training logs in `output/<save_name>/`.
+
+**2. Edit the aggregation script** — update `MODEL_CONFIGS` with the best iteration per fold:
+
+```python
+MODEL_CONFIGS = {
+    'Your_Model_Name': {
+        1: 4500,   # best iteration for fold 1
+        2: 9500,   # best iteration for fold 2
+        3: 7000,   # best iteration for fold 3
+        4: 2000,   # best iteration for fold 4
+        5: 8000,   # best iteration for fold 5
+    }
+}
+```
+
+**3. Update `MODEL_DIR_PATTERNS`** to match the `save_name` from your config:
+
+```python
+MODEL_DIR_PATTERNS = {
+    'Your_Model_Name': 'REDO_Frailty_ccpg_pt4a_deepgaitv2_B1_partially_frozen_fold'
+}
+```
+
+**4. Run:**
+
+```bash
+python aggregate_deepgaitv2_metrics.py   # For DeepGaitV2 models
+python aggregate_swingait_metrics.py     # For SwinGait models
+```
+
+The script parses training logs, extracts metrics at the specified iterations, and outputs mean ± std across folds for accuracy, AUC, F1, precision, recall, and more.
+
+---
+
+## Project Structure
+
+```
+CF_OpenGait/
+├── configs/
+│   ├── deepgaitv2/          ← DeepGaitV2 config files
+│   ├── swingait/            ← SwinGait config files
+│   └── default.yaml         ← Default config (merged with model configs)
+├── kfold_results/
+│   └── partitions/          ← Fold partition files (fold_1.json – fold_5.json)
+├── opengait/
+│   ├── data/                ← Dataset loading
+│   ├── evaluation/          ← Evaluation metrics (evaluator.py)
+│   ├── modeling/
+│   │   ├── models/
+│   │   │   ├── deepgaitv2.py   ← DeepGaitV2 model
+│   │   │   └── swingait.py     ← SwinGait model
+│   │   ├── base_model.py       ← Base model class (training/testing loops)
+│   │   └── losses/             ← Loss functions (CE, Triplet, Focal, etc.)
+│   ├── utils/               ← Utilities (config loading, logging, etc.)
+│   ├── main.py              ← Entry point for training/testing
+│   └── frailty_label.csv    ← Frailty labels for all subjects
+├── run_kfold_cross_validation.py   ← K-fold CV orchestrator
+├── aggregate_deepgaitv2_metrics.py ← Aggregate DeepGaitV2 results
+└── aggregate_swingait_metrics.py   ← Aggregate SwinGait results
+```
+
+---
+
+## Acknowledgments
+
+Built on [OpenGait](https://github.com/ShiqiYu/OpenGait) by Chao Fan et al.
