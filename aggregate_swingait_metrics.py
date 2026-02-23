@@ -12,37 +12,37 @@ import numpy as np
 from pathlib import Path
 from collections import defaultdict
 
-# Model configurations: {model_name: {fold: epoch}}
+# Model configurations: {model_name: {fold: best_checkpoint_iteration}}
 MODEL_CONFIGS = {
-    'UF': {  # Pretrained Unfrozen
+    'M1': {  # All unfrozen (CNN=false, T=-1)
         1: 1500,
         2: 500,
         3: 4000,
         4: 2500,
         5: 5000
     },
-    'pCNN': {
+    'M2': {  # CNN frozen (CNN=true, T=-1)
         1: 1500,
         2: 500,
         3: 6000,
         4: 1500,
         5: 7500
     },
-    'Tintro': {
+    'M3': {  # CNN frozen + patch embed frozen (CNN=true, T=0)
         1: 1500,
         2: 500,
         3: 6000,
         4: 1000,
         5: 7000
     },
-    'T1': {
+    'M4': {  # CNN frozen + Stage 1 frozen (CNN=true, T=1)
         1: 1000,
         2: 1500,
         3: 500,
         4: 500,
         5: 9500
     },
-    'T2': {
+    'M5': {  # CNN frozen + Stages 1-2 frozen (CNN=true, T=2)
         1: 1500,
         2: 7000,
         3: 2000,
@@ -53,11 +53,11 @@ MODEL_CONFIGS = {
 
 # Model name mapping to directory patterns
 MODEL_DIR_PATTERNS = {
-    'UF': 'REDO_Frailty_ccpg_pt1_pretrained(UF)_fold',
-    'pCNN': 'REDO_Frailty_ccpg_pt1_p+CNN_fold',
-    'Tintro': 'REDO_Frailty_ccpg_pt1_p+CNN+Tintro_fold',
-    'T1': 'REDO_Frailty_ccpg_pt1_p+CNN+Tintro+T1_fold',
-    'T2': 'REDO_Frailty_ccpg_pt1_p+CNN+Tintro+T1+T2_fold'
+    'M1': 'REDO_Frailty_ccpg_pt1_pretrained(UF)_fold',
+    'M2': 'REDO_Frailty_ccpg_pt1_p+CNN_fold',
+    'M3': 'REDO_Frailty_ccpg_pt1_p+CNN+Tintro_fold',
+    'M4': 'REDO_Frailty_ccpg_pt1_p+CNN+Tintro+T1_fold',
+    'M5': 'REDO_Frailty_ccpg_pt1_p+CNN+Tintro+T1+T2_fold'
 }
 
 def extract_metrics_from_log(log_file, target_iteration):
@@ -277,7 +277,7 @@ def print_focused_summary(all_results):
     print(f"{'Model':<10} {'Accuracy (%)':<20} {'Cohen Kappa':<20} {'ROC AUC Macro':<20} {'ROC AUC Micro':<20}")
     print("-" * 90)
     
-    for model_name in ['UF', 'pCNN', 'Tintro', 'T1', 'T2']:
+    for model_name in ['M1', 'M2', 'M3', 'M4', 'M5']:
         if model_name not in all_results:
             continue
         
@@ -309,7 +309,7 @@ def print_focused_summary(all_results):
     print("CSV FORMAT (for easy copy-paste):")
     print("Model,Accuracy_mean,Accuracy_std,Cohen_Kappa_mean,Cohen_Kappa_std,ROC_AUC_Macro_mean,ROC_AUC_Macro_std,ROC_AUC_Micro_mean,ROC_AUC_Micro_std")
     
-    for model_name in ['UF', 'pCNN', 'Tintro', 'T1', 'T2']:
+    for model_name in ['M1', 'M2', 'M3', 'M4', 'M5']:
         if model_name not in all_results:
             continue
         
@@ -342,7 +342,7 @@ def print_summary(all_results):
     per_class_metrics = ['sensitivity', 'specificity', 'precision']
     classes = ['frail', 'prefrail', 'nonfrail']
     
-    for model_name in ['UF', 'pCNN', 'Tintro', 'T1', 'T2']:
+    for model_name in ['M1', 'M2', 'M3', 'M4', 'M5']:
         if model_name not in all_results:
             continue
         
@@ -391,7 +391,7 @@ def print_summary(all_results):
     print(','.join(header))
     
     # Data rows
-    for model_name in ['UF', 'pCNN', 'Tintro', 'T1', 'T2']:
+    for model_name in ['M1', 'M2', 'M3', 'M4', 'M5']:
         if model_name not in all_results:
             continue
         

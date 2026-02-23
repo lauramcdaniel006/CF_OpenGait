@@ -12,44 +12,44 @@ import numpy as np
 from pathlib import Path
 from collections import defaultdict
 
-# Model configurations: {model_name: {fold: epoch}}
+# Model configurations: {model_name: {fold: best_checkpoint_iteration}}
 MODEL_CONFIGS = {
-    'All_Trainable': {
+    'D0': {  # All trainable (freeze_layers: false)
         1: 8500,
         2: 500,
         3: 4000,
         4: 5500,
         5: 1500
     },
-    'Early_Frozen': {
-        1: 500,
-        2: 4500,
-        3: 6500,
-        4: 7000,
-        5: 8500
-    },
-    'First_Layer_Frozen': {
+    'D1': {  # Layer 0 frozen (freeze_layers: [0])
         1: 500,
         2: 6000,
         3: 6000,
         4: 8500,
         5: 7500
     },
-    'First_Two_Frozen': {
+    'D2': {  # Layers 0-1 frozen (freeze_layers: [0, 1])
         1: 7000,
         2: 500,
         3: 4500,
         4: 6500,
         5: 5000
     },
-    'Heavy_Frozen': {
+    'D3': {  # Layers 0-2 frozen (freeze_layers: [0, 1, 2])
+        1: 500,
+        2: 4500,
+        3: 6500,
+        4: 7000,
+        5: 8500
+    },
+    'D4': {  # Layers 0-3 frozen (freeze_layers: [0, 1, 2, 3])
         1: 500,
         2: 8000,
         3: 7000,
         4: 1500,
         5: 8000
     },
-    'All_Frozen': {
+    'D5': {  # All CNN layers frozen (freeze_layers: true)
         1: 2000,
         2: 7000,
         3: 7000,
@@ -60,12 +60,12 @@ MODEL_CONFIGS = {
 
 # Model name mapping to directory patterns
 MODEL_DIR_PATTERNS = {
-    'All_Trainable': 'REDO_Frailty_ccpg_pt1_deepgaitv2_all_trainable_fold',
-    'Early_Frozen': 'REDO_Frailty_ccpg_pt1_deepgaitv2_early_frozen_fold',
-    'First_Layer_Frozen': 'REDO_Frailty_ccpg_pt1_deepgaitv2_first_layer_frozen_fold',
-    'First_Two_Frozen': 'REDO_Frailty_ccpg_pt1_deepgaitv2_first_two_frozen_fold',
-    'Heavy_Frozen': 'REDO_Frailty_ccpg_pt1_deepgaitv2_heavy_frozen_fold',
-    'All_Frozen': 'REDO_Frailty_ccpg_pt1_deepgaitv2_all_frozen_fold'
+    'D0': 'REDO_Frailty_ccpg_pt1_deepgaitv2_all_trainable_fold',
+    'D1': 'REDO_Frailty_ccpg_pt1_deepgaitv2_first_layer_frozen_fold',
+    'D2': 'REDO_Frailty_ccpg_pt1_deepgaitv2_first_two_frozen_fold',
+    'D3': 'REDO_Frailty_ccpg_pt1_deepgaitv2_early_frozen_fold',
+    'D4': 'REDO_Frailty_ccpg_pt1_deepgaitv2_heavy_frozen_fold',
+    'D5': 'REDO_Frailty_ccpg_pt1_deepgaitv2_all_frozen_fold'
 }
 
 def extract_metrics_from_log(log_file, target_iteration):
@@ -285,7 +285,7 @@ def print_focused_summary(all_results):
     print(f"{'Model':<25} {'Accuracy (%)':<20} {'Cohen Kappa':<20} {'ROC AUC Macro':<20} {'ROC AUC Micro':<20}")
     print("-" * 105)
     
-    model_order = ['All_Trainable', 'Early_Frozen', 'First_Layer_Frozen', 'First_Two_Frozen', 'Heavy_Frozen', 'All_Frozen']
+    model_order = ['D0', 'D1', 'D2', 'D3', 'D4', 'D5']
     
     for model_name in model_order:
         if model_name not in all_results:
@@ -352,7 +352,7 @@ def print_summary(all_results):
     per_class_metrics = ['sensitivity', 'specificity', 'precision']
     classes = ['frail', 'prefrail', 'nonfrail']
     
-    model_order = ['All_Trainable', 'Early_Frozen', 'First_Layer_Frozen', 'First_Two_Frozen', 'Heavy_Frozen', 'All_Frozen']
+    model_order = ['D0', 'D1', 'D2', 'D3', 'D4', 'D5']
     
     for model_name in model_order:
         if model_name not in all_results:
@@ -403,6 +403,7 @@ def print_summary(all_results):
     print(','.join(header))
     
     # Data rows
+    model_order = ['D0', 'D1', 'D2', 'D3', 'D4', 'D5']
     for model_name in model_order:
         if model_name not in all_results:
             continue

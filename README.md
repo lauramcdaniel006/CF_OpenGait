@@ -86,7 +86,7 @@ Two pretrained checkpoints are needed (from original OpenGait training on the CC
 
 ## Step 5: Update the Config File
 
-Edit the config YAML (e.g., `configs/deepgaitv2/DeepGaitV2_part4a_B1_partially_frozen.yaml`):
+Edit the config YAML (e.g., `configs/deepgaitv2/DeepGaitV2_D3.yaml`):
 
 ```yaml
 data_cfg:
@@ -106,32 +106,45 @@ Freezing controls which pretrained layers stay fixed vs. fine-tune for frailty c
 
 **DeepGaitV2** — 5 CNN blocks (`layer0`–`layer4`), set in `model_cfg.Backbone.freeze_layers`:
 
-```yaml
-freeze_layers: true          # Freeze all CNN layers
-freeze_layers: false         # All layers trainable
-freeze_layers: [0, 1, 2]    # Freeze layers 0–2, layers 3–4 trainable
-```
+| Config | `freeze_layers` | Description |
+|---|---|---|
+| `DeepGaitV2_D0` | `false` | All layers trainable |
+| `DeepGaitV2_D1` | `[0]` | Layer 0 frozen |
+| `DeepGaitV2_D2` | `[0, 1]` | Layers 0–1 frozen |
+| `DeepGaitV2_D3` | `[0, 1, 2]` | Layers 0–2 frozen |
+| `DeepGaitV2_D4` | `[0, 1, 2, 3]` | Layers 0–3 frozen |
+| `DeepGaitV2_D5` | `true` | All CNN layers frozen |
+| `DeepGaitV2_D0_with_weights` | `false` + class weights | All trainable + weighted loss |
+| `DeepGaitV2_D3_with_weights` | `[0, 1, 2]` + class weights | Layers 0–2 frozen + weighted loss |
 
-**SwinGait** — CNN + Transformer, controlled separately:
+**SwinGait** — CNN + Transformer, controlled separately via `freeze_layers` (CNN) and `frozen_stages` (Transformer):
 
-```yaml
-model_cfg:
-  Backbone:
-    freeze_layers: true/false       # Freeze/unfreeze CNN (layer0–layer2)
-  SwinTransformerBlock3D:
-    frozen_stages: -1               # All transformer stages trainable
-    frozen_stages: 0                # Freeze patch embedding only
-    frozen_stages: 1                # Freeze patch embedding + Stage 1
-    frozen_stages: 2                # Freeze patch embedding + Stages 1–2
-```
+| Config | CNN (`freeze_layers`) | Transformer (`frozen_stages`) | Description |
+|---|---|---|---|
+| `SwinGait_M1` | `false` | `-1` | Fully unfrozen |
+| `SwinGait_M2` | `true` | `-1` | CNN frozen, transformer trainable |
+| `SwinGait_M3` | `true` | `0` | CNN frozen + patch embedding frozen |
+| `SwinGait_M4` | `true` | `1` | CNN frozen + Stage 1 frozen |
+| `SwinGait_M5` | `true` | `2` | CNN frozen + Stages 1–2 frozen |
+| `SwinGait_M1_with_weights` | `false` + class weights | `-1` | Fully unfrozen + weighted loss |
+| `SwinGait_M2_with_weights` | `true` + class weights | `-1` | CNN frozen + weighted loss |
 
 ---
 
 ## Step 6: Run K-Fold Cross-Validation
 
 ```bash
+# DeepGaitV2 example (D3 = layers 0-2 frozen)
 python run_kfold_cross_validation.py \
-  --config configs/deepgaitv2/DeepGaitV2_part4a_B1_partially_frozen.yaml \
+  --config configs/deepgaitv2/DeepGaitV2_D3.yaml \
+  --k 5 \
+  --device 0,1 \
+  --nproc 2 \
+  --use-existing-partitions
+
+# SwinGait example (M2 = CNN frozen, transformer trainable)
+python run_kfold_cross_validation.py \
+  --config configs/swingait/SwinGait_M2.yaml \
   --k 5 \
   --device 0,1 \
   --nproc 2 \
@@ -169,12 +182,12 @@ After training completes, aggregate metrics across all k folds.
 
 ```python
 MODEL_CONFIGS = {
-    'Your_Model_Name': {
-        1: 4500,   # best iteration for fold 1
-        2: 9500,   # best iteration for fold 2
-        3: 7000,   # best iteration for fold 3
-        4: 2000,   # best iteration for fold 4
-        5: 8000,   # best iteration for fold 5
+    'D3': {   # Example: DeepGaitV2 with layers 0-2 frozen
+        1: 500,    # best iteration for fold 1
+        2: 4500,   # best iteration for fold 2
+        3: 6500,   # best iteration for fold 3
+        4: 7000,   # best iteration for fold 4
+        5: 8500,   # best iteration for fold 5
     }
 }
 ```
@@ -183,7 +196,7 @@ MODEL_CONFIGS = {
 
 ```python
 MODEL_DIR_PATTERNS = {
-    'Your_Model_Name': 'REDO_Frailty_ccpg_pt4a_deepgaitv2_B1_partially_frozen_fold'
+    'D3': 'your_save_name_fold'
 }
 ```
 
