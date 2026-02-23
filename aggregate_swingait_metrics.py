@@ -51,13 +51,13 @@ MODEL_CONFIGS = {
     }
 }
 
-# Model name mapping to directory patterns
+# Model name mapping to directory patterns (must match save_name in config + _fold)
 MODEL_DIR_PATTERNS = {
-    'M1': 'REDO_Frailty_ccpg_pt1_pretrained(UF)_fold',
-    'M2': 'REDO_Frailty_ccpg_pt1_p+CNN_fold',
-    'M3': 'REDO_Frailty_ccpg_pt1_p+CNN+Tintro_fold',
-    'M4': 'REDO_Frailty_ccpg_pt1_p+CNN+Tintro+T1_fold',
-    'M5': 'REDO_Frailty_ccpg_pt1_p+CNN+Tintro+T1+T2_fold'
+    'M1': 'Frailty_SwinGait_M1_fold',
+    'M2': 'Frailty_SwinGait_M2_fold',
+    'M3': 'Frailty_SwinGait_M3_fold',
+    'M4': 'Frailty_SwinGait_M4_fold',
+    'M5': 'Frailty_SwinGait_M5_fold'
 }
 
 def extract_metrics_from_log(log_file, target_iteration):

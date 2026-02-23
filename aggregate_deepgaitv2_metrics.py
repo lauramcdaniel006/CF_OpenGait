@@ -58,14 +58,14 @@ MODEL_CONFIGS = {
     }
 }
 
-# Model name mapping to directory patterns
+# Model name mapping to directory patterns (must match save_name in config + _fold)
 MODEL_DIR_PATTERNS = {
-    'D0': 'REDO_Frailty_ccpg_pt1_deepgaitv2_all_trainable_fold',
-    'D1': 'REDO_Frailty_ccpg_pt1_deepgaitv2_first_layer_frozen_fold',
-    'D2': 'REDO_Frailty_ccpg_pt1_deepgaitv2_first_two_frozen_fold',
-    'D3': 'REDO_Frailty_ccpg_pt1_deepgaitv2_early_frozen_fold',
-    'D4': 'REDO_Frailty_ccpg_pt1_deepgaitv2_heavy_frozen_fold',
-    'D5': 'REDO_Frailty_ccpg_pt1_deepgaitv2_all_frozen_fold'
+    'D0': 'Frailty_DeepGaitV2_D0_fold',
+    'D1': 'Frailty_DeepGaitV2_D1_fold',
+    'D2': 'Frailty_DeepGaitV2_D2_fold',
+    'D3': 'Frailty_DeepGaitV2_D3_fold',
+    'D4': 'Frailty_DeepGaitV2_D4_fold',
+    'D5': 'Frailty_DeepGaitV2_D5_fold'
 }
 
 def extract_metrics_from_log(log_file, target_iteration):
