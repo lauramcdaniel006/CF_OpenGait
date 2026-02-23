@@ -216,9 +216,3 @@ CF_OpenGait/
 ├── aggregate_deepgaitv2_metrics.py ← Aggregate DeepGaitV2 results
 └── aggregate_swingait_metrics.py   ← Aggregate SwinGait results
 ```
-
----
-
-## Acknowledgments
-
-Built on [OpenGait](https://github.com/ShiqiYu/OpenGait) by Chao Fan et al.
