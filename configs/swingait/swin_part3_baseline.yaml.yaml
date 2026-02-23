@@ -6,7 +6,7 @@ data_cfg:
     num_workers: 0
      # data_in_use: [true]
     remove_no_gallery: false # Remove probe if no gallery for it
-    test_dataset_name: Dataset_FrailtyGait3D
+    test_dataset_name: Frailty
     cache: true
   
   evaluator_cfg:

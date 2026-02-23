@@ -1,19 +1,19 @@
 data_cfg:
-  dataset_name: REDO_Frailty_ccpg_pt4_deepgaitv2_unfrozen_cnn_with_weights
+  dataset_name: Frailty
   dataset_root: /your/path/to/sils
   frailty_label_file: opengait/frailty_label.csv
   dataset_partition: FrailtySet.json
   num_workers: 0
    # data_in_use: [true]
   remove_no_gallery: false # Remove probe if no gallery for it
-  test_dataset_name: Dataset_FrailtyGait3D
+  test_dataset_name: Frailty
   cache: true
 
 evaluator_cfg:
   enable_float16: true
   restore_ckpt_strict: false
   restore_hint: /your/path/to/DeepGaitV2-60000.pt
-  save_name: REDO_Frailty_ccpg_pt4_deepgaitv2_unfrozen_cnn_with_weights
+  save_name: Frailty
   sampler:
     batch_shuffle: false
     batch_size: 2
@@ -81,7 +81,7 @@ trainer_cfg:
   restore_ckpt_strict: false
   restore_hint: /your/path/to/DeepGaitV2-60000.pt
   save_iter: 500
-  save_name: REDO_Frailty_ccpg_pt4_deepgaitv2_unfrozen_cnn_with_weights
+  save_name: Frailty
   sync_BN: true
   T_max_iter: 60000
   total_iter: 80000
