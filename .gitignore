@@ -246,6 +246,10 @@ configs/sconet/
 configs/skeletongait/
 configs/smplgait/
 
+# SwinGait Part 2 (class weight experiments) and Part 3 (loss function experiments)
+configs/swingait/swin_part2_*.yaml
+configs/swingait/swin_part3_*.yaml
+
 # Duplicate/malformed config files
 configs/swingait/swin_part3_baseline.yaml.yaml
 configs/swingait/swin_testb3.yaml.yaml
