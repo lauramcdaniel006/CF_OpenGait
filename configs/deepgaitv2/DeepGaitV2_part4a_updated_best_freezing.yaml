@@ -4,7 +4,6 @@ data_cfg:
   frailty_label_file: opengait/frailty_label.csv
   dataset_partition: FrailtySet.json
   num_workers: 0
-   # data_in_use: [true]
   remove_no_gallery: false # Remove probe if no gallery for it
   test_dataset_name: Frailty
   cache: true
@@ -34,7 +33,7 @@ loss_cfg:
     type: CrossEntropyLoss
     log_prefix: softmax
     log_accuracy: true
-    # PART 4a UPDATED: Baseline Triplet + CE (matched with SwinGait for fair comparison, no class weights)
+  
     # Using best freezing strategy from Part 1 experiments
 
 model_cfg:
@@ -52,16 +51,16 @@ model_cfg:
       - 128 
       - 256
       - 512
-    freeze_layers: [0, 1, 2, 3]  # PART 4a UPDATED: Best freezing strategy from Part 1 (layers 0-3 frozen, layer 4 trainable)
+    freeze_layers: [0, 1, 2, 3]
     # This achieved: Mean Acc 62.33%, Best Acc 73.33% in Part 1 experiments
   SeparateBNNecks:
-    class_num: 3  # PART 4a: Frailty classification (3 classes)
+    class_num: 3
     parts_num: 16
 
 optimizer_cfg:
-  lr: 0.0001  # PART 4a: AdamW (matched with SwinGait for fair comparison, instead of SGD)
+  lr: 0.0001
   solver: AdamW
-  weight_decay: 0.001  # PART 4a: Matched with SwinGait
+  weight_decay: 0.001
 
 scheduler_cfg:
   gamma: 0.5
@@ -75,8 +74,8 @@ scheduler_cfg:
 
 trainer_cfg:
   seed: 42  # Fixed seed for reproducibility
-  enable_float16: false  # PART 4a: Match SwinGait (false)
-  fix_BN: true  # PART 4a: Match SwinGait
+  enable_float16: false
+  fix_BN: true
   log_iter: 100
   with_test: true
   optimizer_reset: True
@@ -92,9 +91,9 @@ trainer_cfg:
   sampler:
     batch_shuffle: true
     batch_size:
-      - 4  # PART 4a: Match SwinGait batch size (4 identities)
-      - 4  # PART 4a: Match SwinGait batch size (4 samples per identity)
-    frames_num_fixed: 60  # PART 4a: Match SwinGait frames
+      - 4
+      - 4
+    frames_num_fixed: 60
     frames_skip_num: 3
     sample_type: fixed_ordered
     type: TripletSampler

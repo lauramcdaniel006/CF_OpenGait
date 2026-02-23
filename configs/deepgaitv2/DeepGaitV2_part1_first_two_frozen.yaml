@@ -4,7 +4,6 @@ data_cfg:
   frailty_label_file: opengait/frailty_label.csv
   dataset_partition: FrailtySet.json
   num_workers: 0
-   # data_in_use: [true]
   remove_no_gallery: false # Remove probe if no gallery for it
   test_dataset_name: Frailty
   cache: true
@@ -34,7 +33,7 @@ loss_cfg:
     type: CrossEntropyLoss
     log_prefix: softmax
     log_accuracy: true
-    # PART 1: Regular CE loss (no focal loss, no class weights)
+  
 
 model_cfg:
   model: DeepGaitV2
@@ -51,15 +50,15 @@ model_cfg:
       - 128 
       - 256
       - 512
-    freeze_layers: [0, 1]  # PART 1: Freeze first 2 layers only (layer0, layer1) - progressive freezing experiment
+    freeze_layers: [0, 1]
   SeparateBNNecks:
-    class_num: 3  # PART 1: Frailty classification (3 classes)
+    class_num: 3
     parts_num: 16
 
 optimizer_cfg:
-  lr: 0.0001  # PART 1: Standard learning rate
+  lr: 0.0001
   solver: AdamW
-  weight_decay: 0.001  # PART 1: Moderate weight decay
+  weight_decay: 0.001
 
 scheduler_cfg:
   gamma: 0.5
@@ -103,8 +102,8 @@ trainer_cfg:
           prob: 0.2
         - type: BaseSilCuttingTransform
         - type: RandomHorizontalFlip
-          prob: 0.2  # PART 1: Basic augmentation (not optimized)
+          prob: 0.2
         - type: RandomRotate
-          prob: 0.2  # PART 1: Basic augmentation (not optimized)
-        # PART 1: No RandomAffine or RandomErasing (basic augmentation only)
+          prob: 0.2
+      
 

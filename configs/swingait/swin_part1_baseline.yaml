@@ -4,7 +4,6 @@ data_cfg:
   frailty_label_file: opengait/frailty_label.csv
   dataset_partition: FrailtySet.json
   num_workers: 0
-   # data_in_use: [true]
   remove_no_gallery: false # Remove probe if no gallery for it
   test_dataset_name: Frailty
   cache: true
@@ -34,7 +33,7 @@ loss_cfg:
     type: CrossEntropyLoss
     log_prefix: softmax
     log_accuracy: true
-    # PART 1 BASELINE: Regular CE loss (no focal loss, no class weights)
+  
     # gamma: 1.5  # REMOVED - using regular CE, not focal loss
     # class_weights: [1.0, 1.6, 1.0]  # REMOVED - equal weights for all classes
 
@@ -51,27 +50,27 @@ model_cfg:
     channels:
       - 64
       - 128
-    freeze_layers: true  # PART 1 BASELINE: Freeze CNN layers (layer0, layer1, layer2)
+    freeze_layers: true
   bin_num: 
     - 15
   SeparateBNNecks:
     in_channels: 256
     class_num: 3
     parts_num: 16
-    dropout_rate: 0.3  # PART 1 BASELINE: Moderate dropout (no freezing, so less regularization needed)
-  # PART 1 BASELINE: No backbone_lr (uses default base_lr * 0.1 for all backbone layers)
+    dropout_rate: 0.3
+
   #backbone_lr: [0.00019, 0.00029, 0.00059, 0.0019]  # REMOVED
   SwinTransformerBlock3D:
-    frozen_stages: -1  # PART 1 BASELINE: No frozen stages (all transformer layers trainable, including patch_embed)
-    drop: 0.3  # PART 1 BASELINE: Moderate dropout
-    attn_drop: 0.2  # PART 1 BASELINE: Moderate attention dropout
-    drop_path: 0.2  # PART 1 BASELINE: Moderate drop path
+    frozen_stages: -1
+    drop: 0.3
+    attn_drop: 0.2
+    drop_path: 0.2
     use_checkpoint: true
 
 optimizer_cfg:
-  lr: 0.0001  # PART 1 BASELINE: Standard learning rate
+  lr: 0.0001
   solver: AdamW
-  weight_decay: 0.001  # PART 1 BASELINE: Moderate weight decay
+  weight_decay: 0.001
 
 scheduler_cfg:
   gamma: 0.5
@@ -115,8 +114,8 @@ trainer_cfg:
           prob: 0.2
         - type: BaseSilCuttingTransform
         - type: RandomHorizontalFlip
-          prob: 0.2  # PART 1 BASELINE: Basic augmentation (not optimized)
+          prob: 0.2
         - type: RandomRotate
-          prob: 0.2  # PART 1 BASELINE: Basic augmentation (not optimized)
-        # PART 1 BASELINE: No RandomAffine or RandomErasing (basic augmentation only)
+          prob: 0.2
+      
 

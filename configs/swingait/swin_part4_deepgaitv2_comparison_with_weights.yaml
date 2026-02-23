@@ -4,7 +4,6 @@ data_cfg:
   frailty_label_file: opengait/frailty_label.csv
   dataset_partition: FrailtySet.json
   num_workers: 0
-   # data_in_use: [true]
   remove_no_gallery: false # Remove probe if no gallery for it
   test_dataset_name: Frailty
   cache: true
@@ -34,7 +33,7 @@ loss_cfg:
     type: CrossEntropyLoss
     log_prefix: softmax
     log_accuracy: true
-    class_weights: [1.130, 0.935, 0.935]  # PART 4: Inverse Square Root weights (train-only split, most stable from Part 2) - [Frail, Prefrail, Nonfrail]
+    class_weights: [1.130, 0.935, 0.935]
 
 model_cfg:
   model: SwinGait
@@ -49,7 +48,7 @@ model_cfg:
     channels:
       - 64
       - 128
-    freeze_layers: true  # PART 4: Freeze CNN layers (layer0, layer1, layer2) for feature extraction
+    freeze_layers: true
   bin_num: 
     - 15
   SeparateBNNecks:
@@ -58,14 +57,14 @@ model_cfg:
     parts_num: 16
     dropout_rate: 0.3
   SwinTransformerBlock3D:
-    frozen_stages: -1  # PART 4: All transformer layers trainable (isolates transformer contribution)
+    frozen_stages: -1
     drop: 0.3
     attn_drop: 0.2
     drop_path: 0.2
     use_checkpoint: true
 
 optimizer_cfg:
-  lr: 0.0001  # PART 4: AdamW (matched with DeepGaitV2 for fair comparison)
+  lr: 0.0001
   solver: AdamW
   weight_decay: 0.001
 
@@ -98,9 +97,9 @@ trainer_cfg:
   sampler:
     batch_shuffle: false
     batch_size:
-      - 4  # PART 4: Match DeepGaitV2 batch size (4 identities)
-      - 4  # PART 4: Match DeepGaitV2 batch size (4 samples per identity)
-    frames_num_fixed: 60  # PART 4: Match DeepGaitV2 frames
+      - 4
+      - 4
+    frames_num_fixed: 60
     frames_skip_num: 3
     sample_type: fixed_ordered
     type: TripletSampler

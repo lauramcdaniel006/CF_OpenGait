@@ -4,7 +4,6 @@ data_cfg:
   frailty_label_file: opengait/frailty_label.csv
   dataset_partition: FrailtySet.json
   num_workers: 0
-   # data_in_use: [true]
   remove_no_gallery: false # Remove probe if no gallery for it
   test_dataset_name: Frailty
   cache: true
