@@ -74,10 +74,8 @@ Thumbs.db
 # One-off analysis/debug/visualization scripts (kept in private repo)
 aggregate_b3_deepgaitv2_metrics.py
 aggregate_b3_swingait_metrics.py
-aggregate_deepgaitv2_metrics.py
 aggregate_deepgaitv2_part1_results.py
 aggregate_deepgaitv2_part4a_metrics.py
-aggregate_swingait_metrics.py
 aggregate_swingait_part1_results.py
 aggregate_swingait_part4a_metrics.py
 aggregate_three_models.py
