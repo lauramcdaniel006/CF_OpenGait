@@ -270,6 +270,14 @@ configs/deepgaitv2/DeepGaitV2_part4_test_selective_freezing.yaml
 configs/deepgaitv2/DeepGaitV2_part4a_updated_best_freezing.yaml
 configs/deepgaitv2/DeepGaitV2_part4b_*.yaml
 
+# Original config names (renamed for public repo, originals kept in private)
+configs/swingait/swin_part1_pretrained_unfrozen.yaml
+configs/swingait/swin_part1_p_CNN.yaml
+configs/swingait/swin_part1_p_CNN_Tintro.yaml
+configs/swingait/swin_part1_p_CNN_Tintro_T1.yaml
+configs/swingait/swin_part1_p_CNN_Tintro_T1_T2.yaml
+configs/deepgaitv2/DeepGaitV2_part1_all_trainable.yaml
+
 # Duplicate/malformed config files
 configs/swingait/swin_part3_baseline.yaml.yaml
 configs/swingait/swin_testb3.yaml.yaml
