@@ -259,6 +259,17 @@ configs/deepgaitv2/DeepGaitV2_oumvlp.yaml
 configs/deepgaitv2/DeepGaitV2_sustech1k.yaml
 configs/swingait/swingait3D_*.yaml
 
+# SwinGait configs not part of core experiments (kept in private repo)
+configs/swingait/swin_baseline.yaml
+configs/swingait/swin_part1_baseline.yaml
+configs/swingait/swin_part4_deepgaitv2_comparison*.yaml
+
+# DeepGaitV2 configs not part of core experiments (kept in private repo)
+configs/deepgaitv2/DeepGaitV2_part4_swingait_comparison*.yaml
+configs/deepgaitv2/DeepGaitV2_part4_test_selective_freezing.yaml
+configs/deepgaitv2/DeepGaitV2_part4a_updated_best_freezing.yaml
+configs/deepgaitv2/DeepGaitV2_part4b_*.yaml
+
 # Duplicate/malformed config files
 configs/swingait/swin_part3_baseline.yaml.yaml
 configs/swingait/swin_testb3.yaml.yaml
