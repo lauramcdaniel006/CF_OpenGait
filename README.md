@@ -43,22 +43,30 @@ pip install torch==1.10 torchvision==0.11
 
 ---
 
-## Step 3: Prepare the Frailty Dataset
+## Step 3: Download and Prepare the Frailty Dataset
 
-Silhouette sequences must be stored as `.pkl` files in this structure:
+Download the frailty silhouette dataset from: **[DATASET_URL]**
+
+The silhouette data must be organized as `.pkl` files in the following directory structure:
 
 ```
 sils/
-├── 001/                   ← subject ID
-│   ├── Frail/             ← frailty label (Frail / Prefrail / Nonfrail)
-│   │   └── 000/           ← view/sequence
-│   │       ├── 000.pkl    ← one frame per .pkl
-│   │       ├── 001.pkl
-│   │       └── ...
-│   └── ...
-├── 002/
-└── ...
+├── 300/                            ← subject ID
+│   └── Prefrail/                   ← frailty label (Frail / Prefrail / Nonfrail)
+│       └── silhouettes/
+│           └── silhouettes.pkl     ← silhouette sequence for this subject
+├── 310/
+│   └── Nonfrail/
+│       └── silhouettes/
+│           └── silhouettes.pkl
+├── 352/
+│   └── Frail/
+│       └── silhouettes/
+│           └── silhouettes.pkl
+└── ...                             ← 67 subjects total
 ```
+
+Each subject has **one** frailty label directory (`Frail`, `Prefrail`, or `Nonfrail`) containing a `silhouettes/silhouettes.pkl` file with the full silhouette sequence.
 
 **Frailty labels** — already included at `opengait/frailty_label.csv`.
 Maps subject IDs → frailty scores (0 = Nonfrail, 1 = Prefrail, 2 = Frail).
