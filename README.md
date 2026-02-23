@@ -63,7 +63,7 @@ sils/
 │   └── Frail/
 │       └── silhouettes/
 │           └── silhouettes.pkl
-└── ...                             ← 67 subjects total
+└── ...
 ```
 
 Each subject has **one** frailty label directory (`Frail`, `Prefrail`, or `Nonfrail`) containing a `silhouettes/silhouettes.pkl` file with the full silhouette sequence.
