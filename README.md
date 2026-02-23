@@ -115,7 +115,7 @@ Freezing controls which pretrained layers stay fixed vs. fine-tune for frailty c
 | `DeepGaitV2_D4` | `[0, 1, 2, 3]` | Layers 0–3 frozen |
 | `DeepGaitV2_D5` | `true` | All CNN layers frozen |
 | `DeepGaitV2_D0_with_weights` | `false` + class weights | All trainable + weighted loss |
-| `DeepGaitV2_D3_with_weights` | `[0, 1, 2]` + class weights | Layers 0–2 frozen + weighted loss |
+| `DeepGaitV2_D1_with_weights` | `[0, 1, 2]` + class weights | Layers 0–2 frozen + weighted loss |
 
 **SwinGait** — CNN + Transformer, controlled separately via `freeze_layers` (CNN) and `frozen_stages` (Transformer):
 
