@@ -223,6 +223,37 @@ README.md
 train_alexnet_vgg16_frailty.py
 calculate_class_weights.py
 
+# Config folders not used for frailty (keep only deepgaitv2/ and swingait/)
+configs/biggait/
+configs/biggergait/
+configs/denoisinggait/
+configs/gaitbase/
+configs/gaitedge/
+configs/gaitgl/
+configs/gaitgraph1/
+configs/gaitgraph2/
+configs/gaitpart/
+configs/gaitset/
+configs/gaitssb/
+configs/gaittr/
+configs/gln/
+configs/lidargait/
+configs/lidargaitv2/
+configs/msgg/
+configs/multigaitpp/
+configs/parsinggait/
+configs/sconet/
+configs/skeletongait/
+configs/smplgait/
+
 # Duplicate/malformed config files
 configs/swingait/swin_part3_baseline.yaml.yaml
 configs/swingait/swin_testb3.yaml.yaml
+
+# Dataset preprocessing scripts (not needed for frailty pipeline)
+datasets/
+
+# Assets from original OpenGait
+assets/
+docs/
+misc/
