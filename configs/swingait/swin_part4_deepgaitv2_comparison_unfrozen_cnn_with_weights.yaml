@@ -1,8 +1,8 @@
 data_cfg:
   dataset_name: REDO_Frailty_ccpg_pt4_swingait_unfrozen_cnn_with_weights
-  dataset_root: /cis/net/r38/data/lmcdan11/sils
-  frailty_label_file: /cis/home/lmcdan11/OpenGait_silhall/opengait/frailty_label.csv
-  dataset_partition: /cis/home/lmcdan11/Documents_Swin/CF_OpenGait/FrailtySet.json
+  dataset_root: /your/path/to/sils
+  frailty_label_file: opengait/frailty_label.csv
+  dataset_partition: FrailtySet.json
   num_workers: 0
    # data_in_use: [true]
   remove_no_gallery: false # Remove probe if no gallery for it
@@ -12,7 +12,7 @@ data_cfg:
 evaluator_cfg:
   enable_float16: true
   restore_ckpt_strict: false
-  restore_hint: /cis/home/lmcdan11/Documents_Swin/OpenGait/opengait/pts/swin_pts/ccpg/SwinGait3D_B1122_C2-20000.pt
+  restore_hint: /your/path/to/SwinGait3D_B1122_C2-20000.pt
   save_name: REDO_Frailty_ccpg_pt4_swingait_unfrozen_cnn_with_weights
   sampler:
     batch_shuffle: false
@@ -87,7 +87,7 @@ trainer_cfg:
   with_test: true
   optimizer_reset: True
   restore_ckpt_strict: false
-  restore_hint: /cis/home/lmcdan11/Documents_Swin/OpenGait/opengait/pts/swin_pts/ccpg/SwinGait3D_B1122_C2-20000.pt
+  restore_hint: /your/path/to/SwinGait3D_B1122_C2-20000.pt
   save_iter: 500
   save_name: REDO_Frailty_ccpg_pt4_swingait_unfrozen_cnn_with_weights
   sync_BN: true
