@@ -65,7 +65,6 @@ scheduler_cfg:
   scheduler: MultiStepLR
 
 trainer_cfg:
-  seed: 42  # Fixed seed for reproducibility
   enable_float16: true # half_percesion float for memory reduction and speedup
   fix_BN: false
   log_iter: 100

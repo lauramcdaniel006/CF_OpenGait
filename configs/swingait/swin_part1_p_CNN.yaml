@@ -79,7 +79,6 @@ scheduler_cfg:
   scheduler: MultiStepLR
 
 trainer_cfg:
-  seed: 0  # Not used - main.py uses per-GPU seeding (GPU 0=0, GPU 1=1)
   enable_float16: false
   fix_BN: true
   log_iter: 100

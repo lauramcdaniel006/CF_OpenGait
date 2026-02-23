@@ -83,7 +83,6 @@ data_cfg:
     scheduler: MultiStepLR
   
   trainer_cfg:
-    seed: 42  # Fixed seed for reproducibility
     enable_float16: false
     fix_BN: true
     log_iter: 100
