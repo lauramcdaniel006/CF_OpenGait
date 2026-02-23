@@ -250,6 +250,9 @@ configs/smplgait/
 configs/swingait/swin_part2_*.yaml
 configs/swingait/swin_part3_*.yaml
 
+# Original OpenGait swingait configs (not frailty-related)
+configs/swingait/swingait3D_*.yaml
+
 # Duplicate/malformed config files
 configs/swingait/swin_part3_baseline.yaml.yaml
 configs/swingait/swin_testb3.yaml.yaml
