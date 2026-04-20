@@ -45,7 +45,7 @@ pip install torch==1.10 torchvision==0.11
 
 ## Step 3: Download and Prepare the Frailty Dataset
 
-Download the frailty silhouette dataset from: **[DATASET_URL]**
+Fill out form to get access the frailty silhouette dataset: **[https://docs.google.com/forms/d/e/1FAIpQLSc-qVNeKD-m5L8-OM-bfXJaQ0DcHpZuuTRjFW6wqpcVjcETyQ/viewform?usp=sharing&ouid=114597648175262583940]**
 
 The silhouette data must be organized as `.pkl` files in the following directory structure:
 
